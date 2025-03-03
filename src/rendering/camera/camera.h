@@ -13,7 +13,6 @@ class Camera {
 private:
     CameraMode Mode;
     float FOV;
-    float AspectRatio;
     float NearPlane;
     float FarPlane;
     float OrthoSize;
@@ -22,6 +21,7 @@ private:
     glm::quat Rotation;
 
 public:
+    float AspectRatio;
     Camera(CameraMode Mode, float AspectRatio);
 
     void SetPerspective(float FOV, float NearPlane, float FarPlane);

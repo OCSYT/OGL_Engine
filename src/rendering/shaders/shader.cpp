@@ -25,8 +25,13 @@ Shader::~Shader() {
 }
 
 void Shader::Bind() const {
+    if (ID == 0) {
+        std::cerr << "Error: Trying to bind an invalid shader program!" << std::endl;
+        return;
+    }
     glUseProgram(ID);
 }
+
 
 void Shader::Unbind() const {
     glUseProgram(0);
@@ -89,8 +94,8 @@ unsigned int Shader::CreateProgram(unsigned int vertexShaderId, unsigned int fra
 
 std::string Shader::LoadShaderSource(const std::string &filePath) {
     std::filesystem::path fullPath = std::filesystem::path(Util::GetExecutablePath()) / filePath;
-
     std::ifstream file(fullPath);
+    
     if (!file) {
         std::cerr << "Failed to open shader file: " << fullPath << std::endl;
         return "";
@@ -98,8 +103,13 @@ std::string Shader::LoadShaderSource(const std::string &filePath) {
 
     std::stringstream buffer;
     buffer << file.rdbuf();
-    return buffer.str();
+    std::string source = buffer.str();
+    if (source.empty()) {
+        std::cerr << "Shader file is empty: " << fullPath << std::endl;
+    }
+    return source;
 }
+
 
 int Shader::GetUniformLocation(const std::string &name) {
     if (ID == 0) {
