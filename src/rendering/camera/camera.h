@@ -20,9 +20,11 @@ private:
     glm::vec3 Position;
     glm::quat Rotation;
 
+    unsigned int* WindowWidth;
+    unsigned int* WindowHeight;
+
 public:
-    float AspectRatio;
-    Camera(CameraMode Mode, float AspectRatio);
+    Camera(CameraMode Mode, unsigned int* WindowWidth, unsigned int* WindowHeight);
 
     void SetPerspective(float FOV, float NearPlane, float FarPlane);
     void SetOrthographic(float Size, float NearPlane, float FarPlane);

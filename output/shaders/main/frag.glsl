@@ -12,6 +12,10 @@ void main() {
     if (UseTexture) {
         vec4 TextureColor = texture(Texture, TexCoord);
         OutColor = TextureColor * vec4(VertexColor, 1.0);
+        
+        if(OutColor.w < 0.1){
+            discard;
+        }
     } else {
         OutColor = vec4(VertexColor, 1.0);
     }

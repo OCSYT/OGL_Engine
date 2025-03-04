@@ -2,83 +2,120 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "util/util.h"
-#include <filesystem>
 #include "Rendering/Camera/Camera.h"
 #include "Rendering/Sprites/Sprite.h"
 #include "Rendering/Materials/Material.h"
 
 unsigned int WindowWidth = 800;
 unsigned int WindowHeight = 600;
-float AspectRatio = (float)WindowWidth / (float)WindowHeight;
-Camera MainCamera(CameraMode::Perspective, AspectRatio);
+unsigned int* PtrWindowWidth = &WindowWidth;
+unsigned int* PtrWindowHeight = &WindowHeight;
 
-void FramebufferSizeCallback(GLFWwindow *Window, int Width, int Height) {
-    float WindowAspectRatio = (float)WindowWidth / (float)WindowHeight;
-    float CurrentAspectRatio = (float)Width / (float)Height;
-    int NewWidth, NewHeight, XOffset, YOffset;
-    if (CurrentAspectRatio > WindowAspectRatio) {
-        NewWidth = (int)(Height * WindowAspectRatio);
-        NewHeight = Height;
-        XOffset = (Width - NewWidth) / 2;
-        YOffset = 0;
-    } else {
-        NewWidth = Width;
-        NewHeight = (int)(Width / WindowAspectRatio);
-        XOffset = 0;
-        YOffset = (Height - NewHeight) / 2;
-    }
+Camera MainCamera(CameraMode::Perspective, PtrWindowWidth, PtrWindowHeight);
 
-    WindowWidth = NewWidth;
-    WindowHeight = NewHeight;
-    AspectRatio = CurrentAspectRatio;
+void FramebufferSizeCallback(GLFWwindow* Window, int Width, int Height) {
+    if (Height == 0) return;
+    WindowWidth = Width;
+    WindowHeight = Height;
+    glViewport(0, 0, WindowWidth, WindowHeight);
+}
 
-    glViewport(XOffset, YOffset, WindowWidth, WindowHeight);
+// Cube vertex data (Position, UV, Color)
+float CubeVertices[] = {
+    // Positions       // UV       // Colors
+   -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f, // 0
+    0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f, // 1
+    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // 2
+   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  1.0f, 1.0f, 0.0f, // 3
+
+   -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 1.0f, // 4
+    0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 1.0f, // 5
+    0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f, // 6
+   -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  0.0f, 0.0f, 0.0f  // 7
+};
+
+// Cube indices for drawing with EBO
+unsigned int CubeIndices[] = {
+    0, 1, 2,  2, 3, 0,  // Back face
+    1, 5, 6,  6, 2, 1,  // Right face
+    5, 4, 7,  7, 6, 5,  // Front face
+    4, 0, 3,  3, 7, 4,  // Left face
+    3, 2, 6,  6, 7, 3,  // Top face
+    4, 5, 1,  1, 0, 4   // Bottom face
+};
+
+unsigned int CubeVAO, CubeVBO, CubeEBO;
+Material* CubeMaterial;  // Using Material System
+
+void InitCube() {
+    glGenVertexArrays(1, &CubeVAO);
+    glGenBuffers(1, &CubeVBO);
+    glGenBuffers(1, &CubeEBO);
+
+    glBindVertexArray(CubeVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertices), CubeVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CubeIndices), CubeIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+
+    // Use material system
+    CubeMaterial = new Material("shaders/main/vert.glsl", "shaders/main/frag.glsl", {});
+}
+
+void RenderCube() {
+    CubeMaterial->Bind();
+
+    glm::mat4 Model = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+    CubeMaterial->SetUniform("Model", Model);
+    CubeMaterial->SetUniform("View", MainCamera.GetViewMatrix());
+    CubeMaterial->SetUniform("Projection", MainCamera.GetProjectionMatrix());
+    CubeMaterial->SetUniform("UseTexture", false);
+
+    glBindVertexArray(CubeVAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
 int main() {
-    MainCamera.SetPosition(glm::vec3(0.0f, 0.0f, 3.0f));
-    MainCamera.SetPerspective(60.0f, 0.1f, 100.0f);
+    if (!glfwInit()) return -1;
 
-    if (!glfwInit()) {
-        std::cerr << "Could not initialize GLFW" << std::endl;
-        return -1;
-    }
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow *Window = glfwCreateWindow(WindowWidth, WindowHeight, "Sprite Rendering", nullptr, nullptr);
-    if (!Window) {
-        std::cerr << "Could not create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+    GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "3D Cube with Sprite", nullptr, nullptr);
+    if (!Window) return -1;
     glfwMakeContextCurrent(Window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Could not initialize GLAD" << std::endl;
-        return -1;
-    }
-
     glfwSetFramebufferSizeCallback(Window, FramebufferSizeCallback);
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return -1;
 
-    Material material("shaders/main/vert.glsl", "shaders/main/frag.glsl", {"silly.png"});
-    Sprite MySprite(material, glm::vec2(-1.0f, -1.0f), glm::vec2(1.0f, 1.0f), Sprite::Anchor::TopLeft, WindowWidth, WindowHeight);
-    glClearColor(0, 0, 0, 1.0f);
-
+    InitCube();
+    Material material("shaders/main/vert.glsl", "shaders/main/frag.glsl", {"sprites/sprite.png"});
+    Sprite MySprite(material, glm::vec2(0, 0), glm::vec2(250.0f, 250.0f), PtrWindowWidth, PtrWindowHeight);
+    MainCamera.SetPosition(glm::vec3(0, 0, 5));
+    glEnable(GL_DEPTH_TEST);
+    
     while (!glfwWindowShouldClose(Window)) {
         glfwPollEvents();
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 View = MainCamera.GetViewMatrix();
-        glm::mat4 Projection = MainCamera.GetProjectionMatrix();
-
-        MySprite.Render(View, Projection);
+        RenderCube();
+        MySprite.Render();
+        MySprite.SetPosition(glm::vec2(WindowWidth - 275.0f, 25.0f));
 
         glfwSwapBuffers(Window);
     }
 
+    delete CubeMaterial;
     glfwDestroyWindow(Window);
     glfwTerminate();
     return 0;

@@ -1,7 +1,8 @@
 #include "Camera.h"
 
-Camera::Camera(CameraMode Mode, float AspectRatio)
-    : Mode(Mode), AspectRatio(AspectRatio), FOV(45.0f), NearPlane(0.1f), FarPlane(100.0f), OrthoSize(10.0f),
+Camera::Camera(CameraMode Mode, unsigned int* WindowWidth, unsigned int* WindowHeight)
+    : Mode(Mode), WindowWidth(WindowWidth), WindowHeight(WindowHeight),
+      FOV(45.0f), NearPlane(0.1f), FarPlane(100.0f), OrthoSize(10.0f),
       Position(glm::vec3(0.0f)), Rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)) {}
 
 void Camera::SetPerspective(float FOV, float NearPlane, float FarPlane) {
@@ -39,6 +40,8 @@ glm::mat4 Camera::GetViewMatrix() const {
 }
 
 glm::mat4 Camera::GetProjectionMatrix() const {
+    if (*WindowHeight == 0) return glm::mat4(1);
+    float AspectRatio = static_cast<float>(*WindowWidth) / static_cast<float>(*WindowHeight);
     if (Mode == CameraMode::Perspective) {
         return glm::perspective(glm::radians(FOV), AspectRatio, NearPlane, FarPlane);
     } else {
