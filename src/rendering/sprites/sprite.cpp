@@ -1,54 +1,62 @@
 #include "sprite.h"
 
-Sprite::Sprite(const Material &material, const glm::vec2 &position,
+Engine::Sprite::Sprite(const Material &material, const glm::vec2 &position,
                const glm::vec2 &size, unsigned int *screenWidth, unsigned int *screenHeight)
     : MaterialInstance(material), Position(position), Size(size),
       ScreenWidth(screenWidth), ScreenHeight(screenHeight)
 {
 
-    // Initialize vertex data
     float Vertices[] = {
-        //Pos             //Uv        //Color
-        1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // Top-right
-        1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // Bottom-right
-        0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
-        0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Top-left
+        // Position        // UV      // Normal      // Color
+         1.0f,  0.0f, 0.0f,  1.0f, 1.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f, 1.0f, // Top-right
+         1.0f,  1.0f, 0.0f,  1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f, 1.0f, // Bottom-right
+         0.0f,  1.0f, 0.0f,  0.0f, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f, 1.0f, // Bottom-left
+         0.0f,  0.0f, 0.0f,  0.0f, 1.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f, 1.0f  // Top-left
     };
+    
 
     unsigned int Indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
+        0, 1, 3,
+        1, 2, 3
     };
 
-    // Create and bind VAO, VBO, and EBO
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices) * sizeof(float), Vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices) * sizeof(unsigned int), Indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)(5 * sizeof(float)));
     glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)(8 * sizeof(float))); 
+    glEnableVertexAttribArray(3);
+
+    glBindVertexArray(0);
 }
 
-Sprite::~Sprite()
+Engine::Sprite::~Sprite()
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 }
 
-void Sprite::Render() {
-    if (*ScreenHeight == 0) return; // Prevent division by zero
+void Engine::Sprite::Render()
+{
+    if (*ScreenHeight == 0)
+        return; // Prevent division by zero
 
     GLboolean depthEnabled;
     glGetBooleanv(GL_DEPTH_TEST, &depthEnabled);
@@ -78,37 +86,38 @@ void Sprite::Render() {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    if(depthEnabled){
+    if (depthEnabled)
+    {
         glEnable(GL_DEPTH_TEST);
     }
 }
 
-void Sprite::SetPosition(const glm::vec2 &position)
+void Engine::Sprite::SetPosition(const glm::vec2 &position)
 {
     Position = position;
 }
 
-void Sprite::SetSize(const glm::vec2 &size)
+void Engine::Sprite::SetSize(const glm::vec2 &size)
 {
     Size = size;
 }
 
-void Sprite::SetMaterial(const Material &material)
+void Engine::Sprite::SetMaterial(const Material &material)
 {
     MaterialInstance = material; // Swap material
 }
 
-Material Sprite::GetMaterial() const
+Engine::Material Engine::Sprite::GetMaterial() const
 {
     return MaterialInstance;
 }
 
-glm::vec2 Sprite::GetPosition() const
+glm::vec2 Engine::Sprite::GetPosition() const
 {
     return Position;
 }
 
-glm::vec2 Sprite::GetSize() const
+glm::vec2 Engine::Sprite::GetSize() const
 {
     return Size;
 }

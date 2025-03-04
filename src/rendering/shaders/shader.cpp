@@ -1,6 +1,6 @@
 #include "shader.h"
 
-Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath) {
+Engine::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath) {
     std::string vertexSource = LoadShaderSource(vertexPath);
     std::string fragmentSource = LoadShaderSource(fragmentPath);
 
@@ -20,11 +20,11 @@ Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath) {
     }
 }
 
-Shader::~Shader() {
+Engine::Shader::~Shader() {
     Unload();
 }
 
-void Shader::Bind() const {
+void Engine::Shader::Bind() const {
     if (ID == 0) {
         std::cerr << "Error: Trying to bind an invalid shader program!" << std::endl;
         return;
@@ -33,18 +33,18 @@ void Shader::Bind() const {
 }
 
 
-void Shader::Unbind() const {
+void Engine::Shader::Unbind() const {
     glUseProgram(0);
 }
 
-void Shader::Unload() {
+void Engine::Shader::Unload() {
     if (ID != 0) {
         glDeleteProgram(ID);
         ID = 0;
     }
 }
 
-unsigned int Shader::CreateShader(unsigned int shaderType, const std::string &shaderSource) {
+unsigned int Engine::Shader::CreateShader(unsigned int shaderType, const std::string &shaderSource) {
     unsigned int shaderId = glCreateShader(shaderType);
     const char* source = shaderSource.c_str();
     glShaderSource(shaderId, 1, &source, nullptr);
@@ -62,7 +62,7 @@ unsigned int Shader::CreateShader(unsigned int shaderType, const std::string &sh
     return shaderId;
 }
 
-unsigned int Shader::CreateProgram(unsigned int vertexShaderId, unsigned int fragmentShaderId) {
+unsigned int Engine::Shader::CreateProgram(unsigned int vertexShaderId, unsigned int fragmentShaderId) {
     if (vertexShaderId == 0 || fragmentShaderId == 0) {
         std::cerr << "Error: One or both shaders failed to compile!" << std::endl;
         return 0;
@@ -92,7 +92,7 @@ unsigned int Shader::CreateProgram(unsigned int vertexShaderId, unsigned int fra
     return programId;
 }
 
-std::string Shader::LoadShaderSource(const std::string &filePath) {
+std::string Engine::Shader::LoadShaderSource(const std::string &filePath) {
     std::filesystem::path fullPath = std::filesystem::path(Util::GetExecutablePath()) / filePath;
     std::ifstream file(fullPath);
     
@@ -111,7 +111,7 @@ std::string Shader::LoadShaderSource(const std::string &filePath) {
 }
 
 
-int Shader::GetUniformLocation(const std::string &name) {
+int Engine::Shader::GetUniformLocation(const std::string &name) {
     if (ID == 0) {
         std::cerr << "Error: Trying to get uniform '" << name << "' from an invalid shader program! (ID is 0)" << std::endl;
         return -1;
@@ -133,22 +133,22 @@ int Shader::GetUniformLocation(const std::string &name) {
 }
 
 
-void Shader::SetUniform(const std::string &name, int value) {
+void Engine::Shader::SetUniform(const std::string &name, int value) {
     glUniform1i(GetUniformLocation(name), value);
 }
 
-void Shader::SetUniform(const std::string &name, float value) {
+void Engine::Shader::SetUniform(const std::string &name, float value) {
     glUniform1f(GetUniformLocation(name), value);
 }
 
-void Shader::SetUniform(const std::string &name, const glm::vec3 &value) {
+void Engine::Shader::SetUniform(const std::string &name, const glm::vec3 &value) {
     glUniform3fv(GetUniformLocation(name), 1, &value[0]);
 }
 
-void Shader::SetUniform(const std::string &name, const glm::vec4 &value) {
+void Engine::Shader::SetUniform(const std::string &name, const glm::vec4 &value) {
     glUniform4fv(GetUniformLocation(name), 1, &value[0]);
 }
 
-void Shader::SetUniform(const std::string &name, const glm::mat4 &value) {
+void Engine::Shader::SetUniform(const std::string &name, const glm::mat4 &value) {
     glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 }

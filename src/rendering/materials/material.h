@@ -3,40 +3,46 @@
 #ifndef material_h
 #define material_h
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
-#include "../../rendering/shaders/shader.h"
+#include "../shaders/shader.h"
 #include "../../util/util.h"
 
-class Material {
-public:
-    Material(const std::string& VertexPath, const std::string& FragmentPath, const std::vector<std::string>& TexturePaths);
 
-    ~Material();
+namespace Engine
+{
+    class Material
+    {
+    public:
+        Material(const std::string &VertexPath, const std::string &FragmentPath, const std::vector<std::string> &TexturePaths);
 
-    void Bind() const;
+        ~Material();
 
-    void SetUniform(const std::string &Name, int Value);
-    void SetUniform(const std::string &Name, float Value);
-    void SetUniform(const std::string &Name, const glm::vec3 &Value);
-    void SetUniform(const std::string &Name, const glm::vec4 &Value);
-    void SetUniform(const std::string &Name, const glm::mat4 &Value);
+        void Bind() const;
 
-    void SetTexture(int Unit, const std::string& TexturePath);
+        void SetUniform(const std::string &Name, int Value);
+        void SetUniform(const std::string &Name, float Value);
+        void SetUniform(const std::string &Name, const glm::vec3 &Value);
+        void SetUniform(const std::string &Name, const glm::vec4 &Value);
+        void SetUniform(const std::string &Name, const glm::mat4 &Value);
 
-    void SetShader(const std::string& VertexPath, const std::string& FragmentPath);
+        void SetTexture(int Unit, const std::string &TexturePath);
 
-    void LoadTextures(const std::vector<std::string>& TexturePaths);
+        void SetShader(const std::string &VertexPath, const std::string &FragmentPath);
 
-    void UnloadTextures();
-    Shader GetShader();
-    void RemoveTexture(int Index);
-    void ReloadTexture(int Index, const std::string& NewTexturePath);
+        void LoadTextures(const std::vector<std::string> &TexturePaths);
 
-private:
-    Shader Shader;
-    std::vector<unsigned int> TextureIDs;
+        void UnloadTextures();
+        Shader GetShader();
+        void RemoveTexture(int Index);
+        void ReloadTexture(int Index, const std::string &NewTexturePath);
+
+    private:
+        Shader Shader;
+        std::vector<unsigned int> TextureIDs;
+    };
 };
 
 #endif

@@ -1,20 +1,18 @@
 #include "Material.h"
 
-Material::Material(const std::string& VertexPath, const std::string& FragmentPath, const std::vector<std::string>& TexturePaths)
-    : Shader(VertexPath, FragmentPath) {
-    
+Engine::Material::Material(const std::string& VertexPath, const std::string& FragmentPath, const std::vector<std::string>& TexturePaths) : Shader(VertexPath, FragmentPath) {
     LoadTextures(TexturePaths);
 }
 
-Material::~Material() {
+Engine::Material::~Material() {
     UnloadTextures();
 }
 
-Shader Material::GetShader(){
+Engine::Shader Engine::Material::GetShader(){
     return Shader;
 }
 
-void Material::Bind() const {
+void Engine::Material::Bind() const {
     Shader.Bind();
     
     for (size_t i = 0; i < TextureIDs.size(); ++i) {
@@ -23,38 +21,39 @@ void Material::Bind() const {
     }
 }
 
-void Material::SetUniform(const std::string &Name, int Value) {
+void Engine::Material::SetUniform(const std::string &Name, int Value) {
     Shader.Bind();
     Shader.SetUniform(Name, Value);
 }
 
-void Material::SetUniform(const std::string &Name, float Value) {
+void Engine::Material::SetUniform(const std::string &Name, float Value) {
     Shader.Bind();
     Shader.SetUniform(Name, Value);
 }
 
-void Material::SetUniform(const std::string &Name, const glm::vec3 &Value) {
+void Engine::Material::SetUniform(const std::string &Name, const glm::vec3 &Value) {
     Shader.Bind();
     Shader.SetUniform(Name, Value);
 }
 
-void Material::SetUniform(const std::string &Name, const glm::vec4 &Value) {
+void Engine::Material::SetUniform(const std::string &Name, const glm::vec4 &Value) {
     Shader.Bind();
     Shader.SetUniform(Name, Value);
 }
 
-void Material::SetUniform(const std::string &Name, const glm::mat4 &Value) {
+void Engine::Material::SetUniform(const std::string &Name, const glm::mat4 &Value) {
     Shader.Bind();
     Shader.SetUniform(Name, Value);
 }
 
-void Material::SetTexture(int Unit, const std::string& TexturePath) {
+void Engine::Material::SetTexture(int Unit, const std::string& TexturePath) {
     if (Unit < 0 || Unit >= static_cast<int>(TextureIDs.size())) {
         std::cerr << "Texture unit out of range!" << std::endl;
         return;
     }
 
     // Load new texture into the texture unit
+    Util::UnloadTexture(TextureIDs[Unit]);
     unsigned int NewTextureID = Util::LoadTexture(TexturePath.c_str());
     if (NewTextureID) {
         glActiveTexture(GL_TEXTURE0 + Unit);
@@ -63,22 +62,18 @@ void Material::SetTexture(int Unit, const std::string& TexturePath) {
     }
 }
 
-void Material::SetShader(const std::string& VertexPath, const std::string& FragmentPath) {
-    return;
+void Engine::Material::SetShader(const std::string& VertexPath, const std::string& FragmentPath) {
     Shader.Unload();  
-    Shader = ::Shader(VertexPath, FragmentPath);
+    Shader = Engine::Shader(VertexPath, FragmentPath);
 }
 
 
-void Material::LoadTextures(const std::vector<std::string>& TexturePaths) {
+void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths) {
     UnloadTextures();
 
-    for (const auto& TexturePath : TexturePaths) {
-        std::filesystem::path FullPath = std::filesystem::path(Util::GetExecutablePath()) / TexturePath;
-        std::string FullPathStr = FullPath.string();
-        const char* Path = FullPathStr.c_str();
-        
-        unsigned int TextureID = Util::LoadTexture(Path);
+    for (const std::string& TexturePath : TexturePaths) {
+
+        unsigned int TextureID = Util::LoadTexture(TexturePath);
         if (TextureID) {
             TextureIDs.push_back(TextureID);
         }
@@ -86,24 +81,25 @@ void Material::LoadTextures(const std::vector<std::string>& TexturePaths) {
 }
 
 
-void Material::UnloadTextures() {
-    if (!TextureIDs.empty()) {
-        glDeleteTextures(static_cast<GLsizei>(TextureIDs.size()), TextureIDs.data());
-        TextureIDs.clear();
+void Engine::Material::UnloadTextures() {
+    for (unsigned int TextureID : TextureIDs) {
+        Util::UnloadTexture(TextureID);
     }
+    TextureIDs.clear();
 }
 
-void Material::RemoveTexture(int Index) {
+void Engine::Material::RemoveTexture(int Index) {
     if (Index < 0 || Index >= static_cast<int>(TextureIDs.size())) {
         std::cerr << "Invalid texture index!" << std::endl;
         return;
     }
 
-    glDeleteTextures(1, &TextureIDs[Index]);
+    Util::UnloadTexture(TextureIDs[Index]);
     TextureIDs.erase(TextureIDs.begin() + Index);
 }
 
-void Material::ReloadTexture(int Index, const std::string& NewTexturePath) {
+
+void Engine::Material::ReloadTexture(int Index, const std::string& NewTexturePath) {
     if (Index < 0 || Index >= static_cast<int>(TextureIDs.size())) {
         std::cerr << "Invalid texture index!" << std::endl;
         return;
@@ -111,7 +107,7 @@ void Material::ReloadTexture(int Index, const std::string& NewTexturePath) {
 
     unsigned int NewTextureID = Util::LoadTexture(NewTexturePath.c_str());
     if (NewTextureID) {
-        glDeleteTextures(1, &TextureIDs[Index]);
+        Util::UnloadTexture(TextureIDs[Index]);
         TextureIDs[Index] = NewTextureID;
     }
 }

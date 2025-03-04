@@ -1,0 +1,44 @@
+# Blender 4.2.3 LTS MTL File: 'Youtuber.blend'
+# www.blender.org
+
+newmtl Gafas
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.006370 0.006370 0.006370
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Markiplier
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd markiplier/source/Textures/SinMarmol/Markiplier_Diffuse+AO.png
+map_Ns markiplier/source/Textures/Markiplier_Roughness.png
+map_Bump -bm 1.000000 markiplier/source/Textures/SinMarmol/Markiplier_Normal_OpenGL.png
+
+newmtl Ojos
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd markiplier/source/Textures/SinMarmol/Eye.jpg
+
+newmtl Pelo
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd markiplier/source/Textures/SinMarmol/Pelo_Base_Color.png
+map_Bump -bm 1.000000 markiplier/source/Textures/SinMarmol/Pelo_Normal_OpenGL.png

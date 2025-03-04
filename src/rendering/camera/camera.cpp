@@ -1,45 +1,45 @@
 #include "Camera.h"
 
-Camera::Camera(CameraMode Mode, unsigned int* WindowWidth, unsigned int* WindowHeight)
+Engine::Camera::Camera(CameraMode Mode, unsigned int* WindowWidth, unsigned int* WindowHeight)
     : Mode(Mode), WindowWidth(WindowWidth), WindowHeight(WindowHeight),
       FOV(90.0f), NearPlane(0.1f), FarPlane(100.0f), OrthoSize(10.0f),
       Position(glm::vec3(0.0f)), Rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)) {}
 
-void Camera::SetPerspective(float FOV, float NearPlane, float FarPlane) {
+void Engine::Camera::SetPerspective(float FOV, float NearPlane, float FarPlane) {
     this->Mode = CameraMode::Perspective;
     this->FOV = FOV;
     this->NearPlane = NearPlane;
     this->FarPlane = FarPlane;
 }
 
-void Camera::SetOrthographic(float Size, float NearPlane, float FarPlane) {
+void Engine::Camera::SetOrthographic(float Size, float NearPlane, float FarPlane) {
     this->Mode = CameraMode::Orthographic;
     this->OrthoSize = Size;
     this->NearPlane = NearPlane;
     this->FarPlane = FarPlane;
 }
 
-void Camera::SetPosition(const glm::vec3& Pos) {
+void Engine::Camera::SetPosition(const glm::vec3& Pos) {
     this->Position = Pos;
 }
 
-void Camera::SetRotation(const glm::quat& Rot) {
+void Engine::Camera::SetRotation(const glm::quat& Rot) {
     this->Rotation = Rot;
 }
 
-glm::vec3 Camera::GetPosition() const {
+glm::vec3 Engine::Camera::GetPosition() const {
     return Position;
 }
 
-glm::quat Camera::GetRotation() const {
+glm::quat Engine::Camera::GetRotation() const {
     return Rotation;
 }
 
-glm::mat4 Camera::GetViewMatrix() const {
+glm::mat4 Engine::Camera::GetViewMatrix() const {
     return glm::translate(glm::mat4(1.0f), -Position) * glm::mat4_cast(Rotation);
 }
 
-glm::mat4 Camera::GetProjectionMatrix() const {
+glm::mat4 Engine::Camera::GetProjectionMatrix() const {
     if (*WindowHeight == 0) return glm::mat4(1);
     float AspectRatio = static_cast<float>(*WindowWidth) / static_cast<float>(*WindowHeight);
     if (Mode == CameraMode::Perspective) {
