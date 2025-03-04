@@ -50,6 +50,11 @@ Sprite::~Sprite()
 void Sprite::Render() {
     if (*ScreenHeight == 0) return; // Prevent division by zero
 
+    GLboolean depthEnabled;
+    glGetBooleanv(GL_DEPTH_TEST, &depthEnabled);
+
+    glDisable(GL_DEPTH_TEST);
+
     glm::mat4 view = glm::mat4(1);
 
     // Orthographic projection using screen-space coordinates
@@ -72,6 +77,10 @@ void Sprite::Render() {
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    if(depthEnabled){
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 void Sprite::SetPosition(const glm::vec2 &position)

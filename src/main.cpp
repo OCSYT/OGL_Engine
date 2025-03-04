@@ -91,7 +91,6 @@ void RenderCube() {
 
 int main() {
     if (!glfwInit()) return -1;
-
     GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "3D Cube with Sprite", nullptr, nullptr);
     if (!Window) return -1;
     glfwMakeContextCurrent(Window);
@@ -101,14 +100,15 @@ int main() {
     InitCube();
     Material material("shaders/main/vert.glsl", "shaders/main/frag.glsl", {"sprites/sprite.png"});
     Sprite MySprite(material, glm::vec2(0, 0), glm::vec2(250.0f, 250.0f), PtrWindowWidth, PtrWindowHeight);
-    MainCamera.SetPosition(glm::vec3(0, 0, 5));
-    glEnable(GL_DEPTH_TEST);
+    MainCamera.SetPosition(glm::vec3(0, 0, 2));
     
     while (!glfwWindowShouldClose(Window)) {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
         RenderCube();
+
         MySprite.Render();
         MySprite.SetPosition(glm::vec2(WindowWidth - 275.0f, 25.0f));
 
