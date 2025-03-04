@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef util_h
+#define util_h
+
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -13,3 +16,5 @@ public:
     static std::string GetExecutablePath();
     static unsigned int LoadTexture(const char *Path);
 };
+
+#endif

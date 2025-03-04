@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef camera_h
+#define camera_h
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -36,3 +39,5 @@ public:
     glm::mat4 GetViewMatrix() const;
     glm::mat4 GetProjectionMatrix() const;
 };
+
+#endif

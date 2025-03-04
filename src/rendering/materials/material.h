@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef material_h
+#define material_h
+
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
@@ -35,3 +38,5 @@ private:
     Shader Shader;
     std::vector<unsigned int> TextureIDs;
 };
+
+#endif

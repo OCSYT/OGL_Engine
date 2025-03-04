@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef sprite_h
+#define sprite_h
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
@@ -32,3 +35,5 @@ private:
 
     unsigned int VAO, VBO, EBO;
 };
+
+#endif

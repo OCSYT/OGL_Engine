@@ -5,9 +5,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "util/util.h"
-#include "Rendering/Camera/Camera.h"
-#include "Rendering/Sprites/Sprite.h"
-#include "Rendering/Materials/Material.h"
+#include "rendering/camera/camera.h"
+#include "rendering/sprites/sprite.h"
+#include "rendering/materials/material.h"
 
 unsigned int WindowWidth = 800;
 unsigned int WindowHeight = 600;
@@ -73,7 +73,7 @@ void InitCube() {
     glBindVertexArray(0);
 
     // Use material system
-    CubeMaterial = new Material("shaders/main/vert.glsl", "shaders/main/frag.glsl", {});
+    CubeMaterial = new Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {});
 }
 
 void RenderCube() {
@@ -98,7 +98,7 @@ int main() {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return -1;
 
     InitCube();
-    Material material("shaders/main/vert.glsl", "shaders/main/frag.glsl", {"sprites/sprite.png"});
+    Material material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/sprites/sprite.png"});
     Sprite MySprite(material, glm::vec2(0, 0), glm::vec2(250.0f, 250.0f), PtrWindowWidth, PtrWindowHeight);
     MainCamera.SetPosition(glm::vec3(0, 0, 2));
     

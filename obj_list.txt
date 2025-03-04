@@ -1,0 +1,7 @@
+"obj\hub\OGL_Engine\src\main.o" 
+"obj\hub\OGL_Engine\src\glad.o" 
+"obj\hub\OGL_Engine\src\rendering\camera\camera.o" 
+"obj\hub\OGL_Engine\src\rendering\materials\material.o" 
+"obj\hub\OGL_Engine\src\rendering\shaders\shader.o" 
+"obj\hub\OGL_Engine\src\rendering\sprites\sprite.o" 
+"obj\hub\OGL_Engine\src\util\util.o" 

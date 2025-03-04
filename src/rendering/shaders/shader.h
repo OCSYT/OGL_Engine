@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef shader_h
+#define shader_h
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -43,3 +46,5 @@ private:
 
     std::string LoadShaderSource(const std::string &filePath);
 };
+
+#endif
