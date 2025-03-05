@@ -34,9 +34,9 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
             });
         }
 
-        for (unsigned int i = 0; i < AssimpMesh->mNumFaces; i++) {
+        for (int i = 0; i < AssimpMesh->mNumFaces; i++) {
             aiFace Face = AssimpMesh->mFaces[i];
-            for (unsigned int j = 0; j < Face.mNumIndices; j++) {
+            for (int j = 0; j < Face.mNumIndices; j++) {
                 Indices.push_back(Face.mIndices[j]);
             }
         }
@@ -66,7 +66,6 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
 
         Mesh.IndexCount = static_cast<unsigned int>(Indices.size());
 
-        // Add the processed mesh data to the ModelMesh object
         ModelMesh.Meshes.push_back(Mesh);
     }
 
