@@ -11,6 +11,7 @@
 #include "rendering/sprites/sprite.h"
 #include "rendering/materials/material.h"
 #include "rendering/model/model.h"
+#include "rendering/text/text.h"
 
 unsigned int WindowWidth = 800;
 unsigned int WindowHeight = 600;
@@ -27,10 +28,33 @@ Engine::Material *Eye;
 Engine::Material *Glasses;
 Engine::Material *Hair;
 
+
+Engine::Material* FontMaterial;
+Engine::Text* UIText;
+
+void InitText()
+{
+    FontMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/font/font.png"});
+    UIText = new Engine::Text(FontMaterial, glm::vec2(50, 50), 64.0f, &WindowWidth, &WindowHeight);
+}
+
+void RenderText()
+{
+    UIText->Render("Hello, World!");
+}
+
 void InitSprite()
 {
     SpriteMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/sprite.png"});
     TestSprite = new Engine::Sprite(SpriteMaterial, glm::vec2(0, 0), glm::vec2(0.0f, 0.0f), &WindowWidth, &WindowHeight);
+}
+
+void RenderSprite()
+{
+    float ScaleFactor = (WindowWidth < WindowHeight ? WindowWidth : WindowHeight) / 3.0f;
+    TestSprite->SetSize(glm::vec2(ScaleFactor, ScaleFactor));
+    TestSprite->SetPosition(glm::vec2(WindowWidth - ScaleFactor - 25.0f, 25.0f));
+    TestSprite->Render();
 }
 
 void InitMarkiplier()
@@ -69,13 +93,6 @@ void RenderMarkiplier()
     Engine::Model::DrawMesh(MarkiplierModel, {Skin, Eye, Glasses, Hair}, ModelMatrix, &MainCamera);
 }
 
-void RenderSprite()
-{
-    float ScaleFactor = (WindowWidth < WindowHeight ? WindowWidth : WindowHeight) / 3.0f;
-    TestSprite->SetSize(glm::vec2(ScaleFactor, ScaleFactor));
-    TestSprite->SetPosition(glm::vec2(WindowWidth - ScaleFactor - 25.0f, 25.0f));
-    TestSprite->Render();
-}
 
 void Render(GLFWwindow *Window)
 {
@@ -87,6 +104,7 @@ void Render(GLFWwindow *Window)
 
     RenderMarkiplier();
     RenderSprite();
+    RenderText();
 
     glfwSwapBuffers(Window);
 }
@@ -127,7 +145,7 @@ int main()
         return -1;
     }
     
-
+    InitText();
     InitSprite();
     InitMarkiplier();
     MainCamera.SetPosition(glm::vec3(0, 0, 1));
