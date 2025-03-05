@@ -25,8 +25,8 @@ Engine::Material *Eye;
 Engine::Material *Glasses;
 Engine::Material *Hair;
 
-
-void InitSprite(){
+void InitSprite()
+{
     SpriteMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/sprite.png"});
     TestSprite = new Engine::Sprite(*SpriteMaterial, glm::vec2(0, 0), glm::vec2(0.0f, 0.0f), &WindowWidth, &WindowHeight);
 }
@@ -38,18 +38,25 @@ void InitMarkiplier()
     Skin = new Engine::Material("assets/shaders/main/vert.glsl",
                                 "assets/shaders/main/frag.glsl",
                                 {"assets/textures/Markiplier/Skin.png"});
+    Skin->SetUniform("UseTexture", true);
 
     Eye = new Engine::Material("assets/shaders/main/vert.glsl",
                                "assets/shaders/main/frag.glsl",
                                {"assets/textures/Markiplier/Eye.png"});
 
+    Eye->SetUniform("UseTexture", true);
+
     Glasses = new Engine::Material("assets/shaders/main/vert.glsl",
                                    "assets/shaders/main/frag.glsl",
                                    {});
 
+    Glasses->SetUniform("Color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
     Hair = new Engine::Material("assets/shaders/main/vert.glsl",
                                 "assets/shaders/main/frag.glsl",
                                 {"assets/textures/Markiplier/Hair.png"});
+
+    Hair->SetUniform("UseTexture", true);
 }
 
 void RenderMarkiplier()
@@ -58,16 +65,16 @@ void RenderMarkiplier()
     ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, -0.25f, 0.0f));
 
     Engine::Model::DrawModel(MarkiplierModel.Meshes[0], Skin, ModelMatrix, &MainCamera);
-    Skin->SetUniform("UseTexture", true);
+    
     Engine::Model::DrawModel(MarkiplierModel.Meshes[1], Eye, ModelMatrix, &MainCamera);
-    Eye->SetUniform("UseTexture", true);
+
     Engine::Model::DrawModel(MarkiplierModel.Meshes[2], Glasses, ModelMatrix, &MainCamera);
-    Glasses->SetUniform("Color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
     Engine::Model::DrawModel(MarkiplierModel.Meshes[3], Hair, ModelMatrix, &MainCamera);
-    Hair->SetUniform("UseTexture", true);
 }
 
-void RenderSprite(){
+void RenderSprite()
+{
     float ScaleFactor = (WindowWidth < WindowHeight ? WindowWidth : WindowHeight) / 3.0f;
     TestSprite->SetSize(glm::vec2(ScaleFactor, ScaleFactor));
     TestSprite->SetPosition(glm::vec2(WindowWidth - ScaleFactor - 25.0f, 25.0f));
@@ -77,7 +84,7 @@ void RenderSprite(){
 void Render(GLFWwindow *Window)
 {
     glfwPollEvents();
-    
+
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Set background color
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
@@ -88,7 +95,6 @@ void Render(GLFWwindow *Window)
     glfwSwapBuffers(Window);
 }
 
-
 void FramebufferSizeCallback(GLFWwindow *Window, int Width, int Height)
 {
     if (Height == 0)
@@ -97,7 +103,6 @@ void FramebufferSizeCallback(GLFWwindow *Window, int Width, int Height)
     WindowHeight = Height;
     glViewport(0, 0, WindowWidth, WindowHeight);
 }
-
 
 int main()
 {

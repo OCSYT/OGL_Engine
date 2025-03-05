@@ -6,6 +6,8 @@ Engine::Sprite::Sprite(const Material &material, const glm::vec2 &position,
       ScreenWidth(screenWidth), ScreenHeight(screenHeight)
 {
 
+    MaterialInstance.SetUniform("UseTexture", true);
+
     float Vertices[] = {
         // Position        // UV      // Normal      // Color
          1.0f,  0.0f, 0.0f,  1.0f, 1.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f, 1.0f, // Top-right
@@ -81,7 +83,6 @@ void Engine::Sprite::Render()
     MaterialInstance.SetUniform("Model", model);
     MaterialInstance.SetUniform("View", view);
     MaterialInstance.SetUniform("Projection", projection);
-    MaterialInstance.SetUniform("UseTexture", true);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -105,6 +106,7 @@ void Engine::Sprite::SetSize(const glm::vec2 &size)
 void Engine::Sprite::SetMaterial(const Material &material)
 {
     MaterialInstance = material; // Swap material
+    MaterialInstance.SetUniform("UseTexture", true);
 }
 
 Engine::Material Engine::Sprite::GetMaterial() const
