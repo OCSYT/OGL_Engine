@@ -34,9 +34,9 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
             });
         }
 
-        for (int i = 0; i < AssimpMesh->mNumFaces; i++) {
+        for (unsigned int i = 0; i < AssimpMesh->mNumFaces; i++) {
             aiFace Face = AssimpMesh->mFaces[i];
-            for (int j = 0; j < Face.mNumIndices; j++) {
+            for (unsigned int j = 0; j < Face.mNumIndices; j++) {
                 Indices.push_back(Face.mIndices[j]);
             }
         }
