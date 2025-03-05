@@ -27,15 +27,13 @@ namespace Engine
         void SetUniform(const std::string &Name, const glm::vec3 &Value);
         void SetUniform(const std::string &Name, const glm::vec4 &Value);
         void SetUniform(const std::string &Name, const glm::mat4 &Value);
-
-        void SetTexture(int Unit, const std::string &TexturePath);
-
         void SetShader(const std::string &VertexPath, const std::string &FragmentPath);
-
+        void SetTexture(int Unit, unsigned int TextureID);
+        void LoadTexturesFromData(const std::vector<std::tuple<const unsigned char*, int, int, int>>& TextureData);
         void LoadTextures(const std::vector<std::string> &TexturePaths);
-
+        void LoadTexture(int Unit, const std::string& TexturePath);
         void UnloadTextures();
-        Shader GetShader();
+        Shader* GetShader();
         void RemoveTexture(int Index);
         void ReloadTexture(int Index, const std::string &NewTexturePath);
 

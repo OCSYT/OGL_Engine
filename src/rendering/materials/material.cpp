@@ -9,8 +9,8 @@ Engine::Material::~Material() {
     UnloadTextures();
 }
 
-Engine::Shader Engine::Material::GetShader(){
-    return Shader;
+Engine::Shader* Engine::Material::GetShader(){
+    return &Shader;
 }
 
 void Engine::Material::Bind() const {
@@ -21,6 +21,8 @@ void Engine::Material::Bind() const {
         glBindTexture(GL_TEXTURE_2D, TextureIDs[i]);
     }
 }
+
+
 
 void Engine::Material::SetUniform(const std::string &Name, int Value) {
     Shader.Bind();
@@ -47,10 +49,11 @@ void Engine::Material::SetUniform(const std::string &Name, const glm::mat4 &Valu
     Shader.SetUniform(Name, Value);
 }
 
-void Engine::Material::SetTexture(int Unit, const std::string& TexturePath) {
-    if (Unit < 0 || Unit >= static_cast<int>(TextureIDs.size())) {
-        std::cerr << "Texture unit out of range!" << std::endl;
-        return;
+void Engine::Material::LoadTexture(int Unit, const std::string& TexturePath) {
+    if (Unit < 0 || Unit >= static_cast<int>(TextureIDs.size())) {        
+        if (Unit >= static_cast<int>(TextureIDs.size())) {
+            TextureIDs.resize(Unit + 1, 0);
+        }
     }
 
     // Load new texture into the texture unit
@@ -63,6 +66,22 @@ void Engine::Material::SetTexture(int Unit, const std::string& TexturePath) {
     }
 }
 
+
+void Engine::Material::SetTexture(int Unit, unsigned int TextureID) {
+    std::cout << "Binding texture " << TextureID << " to unit " << Unit << std::endl;
+    if (Unit < 0 || Unit >= static_cast<int>(TextureIDs.size())) {        
+        if (Unit >= static_cast<int>(TextureIDs.size())) {
+            TextureIDs.resize(Unit + 1, 0);
+        }
+    }
+
+
+    glActiveTexture(GL_TEXTURE0 + Unit);
+    glBindTexture(GL_TEXTURE_2D, TextureID);
+
+    TextureIDs[Unit] = TextureID;
+}
+
 void Engine::Material::SetShader(const std::string& VertexPath, const std::string& FragmentPath) {
     Shader.Unload();  
     Shader = Engine::Shader(VertexPath, FragmentPath);
@@ -70,16 +89,30 @@ void Engine::Material::SetShader(const std::string& VertexPath, const std::strin
 
 
 void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths) {
-    UnloadTextures();
-
     for (const std::string& TexturePath : TexturePaths) {
-
         unsigned int TextureID = Util::LoadTexture(TexturePath);
         if (TextureID) {
             TextureIDs.push_back(TextureID);
         }
     }
 }
+
+
+void Engine::Material::LoadTexturesFromData(const std::vector<std::tuple<const unsigned char*, int, int, int>>& TextureData) {
+    for (const auto& DataTuple : TextureData) {
+        const unsigned char* Data = std::get<0>(DataTuple);
+        int Width = std::get<1>(DataTuple);
+        int Height = std::get<2>(DataTuple);
+        int NumChannels = std::get<3>(DataTuple);
+
+        unsigned int TextureID = Util::LoadTextureFromData(Data, Width, Height, NumChannels);
+        if (TextureID) {
+            TextureIDs.push_back(TextureID);
+        }
+    }
+}
+
+
 
 
 void Engine::Material::UnloadTextures() {

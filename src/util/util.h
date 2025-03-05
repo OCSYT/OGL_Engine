@@ -31,6 +31,7 @@ namespace Engine
 
         static std::string GetExecutablePath();
         static unsigned int LoadTexture(std::string Path);
+        static unsigned int LoadTextureFromData(const unsigned char* Data, int Width, int Height, int NumChannels);
         static void UnloadTexture(unsigned int &TextureID);
     };
 };

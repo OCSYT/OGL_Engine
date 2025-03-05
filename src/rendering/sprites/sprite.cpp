@@ -1,12 +1,12 @@
 #include "sprite.h"
 
-Engine::Sprite::Sprite(const Material &material, const glm::vec2 &position,
+Engine::Sprite::Sprite(Material* material, const glm::vec2 &position,
                const glm::vec2 &size, unsigned int *screenWidth, unsigned int *screenHeight)
-    : MaterialInstance(material), Position(position), Size(size),
+    : Position(position), Size(size),
       ScreenWidth(screenWidth), ScreenHeight(screenHeight)
 {
-
-    MaterialInstance.SetUniform("UseTexture", true);
+    MaterialInstance = material;
+    MaterialInstance->SetUniform("UseTexture", true);
 
     float Vertices[] = {
         // Position        // UV      // Normal      // Color
@@ -74,15 +74,15 @@ void Engine::Sprite::Render()
         -1.0f, 1.0f                              // Near, Far
     );
 
-    MaterialInstance.Bind();
+    MaterialInstance->Bind();
 
     // Corrected: Position should not be adjusted by size
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(Position, 0.0f));
     model = glm::scale(model, glm::vec3(Size, 1.0f)); // Scale to pixel size
 
-    MaterialInstance.SetUniform("Model", model);
-    MaterialInstance.SetUniform("View", view);
-    MaterialInstance.SetUniform("Projection", projection);
+    MaterialInstance->SetUniform("Model", model);
+    MaterialInstance->SetUniform("View", view);
+    MaterialInstance->SetUniform("Projection", projection);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -103,13 +103,13 @@ void Engine::Sprite::SetSize(const glm::vec2 &size)
     Size = size;
 }
 
-void Engine::Sprite::SetMaterial(const Material &material)
+void Engine::Sprite::SetMaterial(Material* material)
 {
     MaterialInstance = material; // Swap material
-    MaterialInstance.SetUniform("UseTexture", true);
+    MaterialInstance->SetUniform("UseTexture", true);
 }
 
-Engine::Material Engine::Sprite::GetMaterial() const
+Engine::Material* Engine::Sprite::GetMaterial() const
 {
     return MaterialInstance;
 }

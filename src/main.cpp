@@ -1,4 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
+
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -16,6 +17,7 @@ unsigned int WindowHeight = 600;
 
 Engine::Camera MainCamera(Engine::Camera::CameraMode::Perspective, &WindowWidth, &WindowHeight);
 
+
 Engine::Material *SpriteMaterial;
 Engine::Sprite *TestSprite;
 
@@ -28,7 +30,7 @@ Engine::Material *Hair;
 void InitSprite()
 {
     SpriteMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/sprite.png"});
-    TestSprite = new Engine::Sprite(*SpriteMaterial, glm::vec2(0, 0), glm::vec2(0.0f, 0.0f), &WindowWidth, &WindowHeight);
+    TestSprite = new Engine::Sprite(SpriteMaterial, glm::vec2(0, 0), glm::vec2(0.0f, 0.0f), &WindowWidth, &WindowHeight);
 }
 
 void InitMarkiplier()
@@ -124,6 +126,7 @@ int main()
         glfwTerminate();
         return -1;
     }
+    
 
     InitSprite();
     InitMarkiplier();
