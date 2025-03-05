@@ -1,6 +1,6 @@
 #include "model.h"
 
-Engine::Model::Mesh Engine::Model::LoadModel(std::string Path) {
+Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
     std::filesystem::path FullPath = std::filesystem::path(Util::GetExecutablePath()) / Path;
     std::string FullPathStr = FullPath.string();
     const char* FullPathString = FullPathStr.c_str();
@@ -77,6 +77,7 @@ Engine::Model::Mesh Engine::Model::LoadModel(std::string Path) {
     return ModelMesh;
 }
 
+
 void Engine::Model::DrawModel(const MeshData& Mesh, Material* MaterialPtr, const glm::mat4& ModelMatrix, Camera* MainCamera) {
     if (!MaterialPtr) {
         std::cerr << "DrawModel: Material pointer is null!" << std::endl;
@@ -96,6 +97,23 @@ void Engine::Model::DrawModel(const MeshData& Mesh, Material* MaterialPtr, const
     glBindVertexArray(Mesh.VAO);
     glDrawElements(GL_TRIANGLES, Mesh.IndexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+}
+
+void Engine::Model::DrawMesh(const Mesh& ModelMesh, const std::vector<Material*>& Materials, const glm::mat4& ModelMatrix, Camera* MainCamera) {
+    if (Materials.empty()) {
+        std::cerr << "DrawMesh: Material list is empty!" << std::endl;
+        return;
+    }
+
+    if (!MainCamera) {
+        std::cerr << "DrawMesh: Camera pointer is null!" << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < ModelMesh.Meshes.size(); ++i) {
+        Material* MaterialPtr = (i < Materials.size()) ? Materials[i] : Materials.back();
+        DrawModel(ModelMesh.Meshes[i], MaterialPtr, ModelMatrix, MainCamera);
+    }
 }
 
 

@@ -34,9 +34,10 @@ namespace Engine
             std::vector<MeshData> Meshes;
         };
 
-        static Mesh LoadModel(std::string Path);
+        static Mesh LoadMesh(std::string Path);
         static void UnloadMesh(Mesh &Mesh);
         static void DrawModel(const MeshData &Mesh, class Material *MaterialPtr, const glm::mat4 &ModelMatrix, Camera *MainCamera);
+        static void DrawMesh(const Mesh& ModelMesh, const std::vector<Material*>& Materials, const glm::mat4& ModelMatrix, Camera* MainCamera);
     };
 };
 

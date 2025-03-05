@@ -33,7 +33,7 @@ void InitSprite()
 
 void InitMarkiplier()
 {
-    MarkiplierModel = Engine::Model::LoadModel("assets/models/Markiplier.obj");
+    MarkiplierModel = Engine::Model::LoadMesh("assets/models/Markiplier.obj");
 
     Skin = new Engine::Material("assets/shaders/main/vert.glsl",
                                 "assets/shaders/main/frag.glsl",
@@ -64,13 +64,7 @@ void RenderMarkiplier()
     glm::mat4 ModelMatrix = glm::rotate(glm::mat4(1.0f), static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
     ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, -0.25f, 0.0f));
 
-    Engine::Model::DrawModel(MarkiplierModel.Meshes[0], Skin, ModelMatrix, &MainCamera);
-    
-    Engine::Model::DrawModel(MarkiplierModel.Meshes[1], Eye, ModelMatrix, &MainCamera);
-
-    Engine::Model::DrawModel(MarkiplierModel.Meshes[2], Glasses, ModelMatrix, &MainCamera);
-
-    Engine::Model::DrawModel(MarkiplierModel.Meshes[3], Hair, ModelMatrix, &MainCamera);
+    Engine::Model::DrawMesh(MarkiplierModel, {Skin, Eye, Glasses, Hair}, ModelMatrix, &MainCamera);
 }
 
 void RenderSprite()
