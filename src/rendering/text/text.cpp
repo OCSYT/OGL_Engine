@@ -14,7 +14,6 @@ namespace Engine
     {
         delete SpriteRenderer;
     }
-
     void Text::SetCharacterMap()
     {
         CharacterMap[" "] = 0;
@@ -79,7 +78,7 @@ namespace Engine
         CharacterMap["["] = 59;
         CharacterMap["\\"] = 60;
         CharacterMap["]"] = 61;
-        CharacterMap["⌃"] = 62;
+        CharacterMap["^"] = 62;
         CharacterMap["_"] = 63;
         CharacterMap["`"] = 64;
         CharacterMap["a"] = 65;
@@ -113,6 +112,7 @@ namespace Engine
         CharacterMap["}"] = 93;
         CharacterMap["~"] = 94;
     }
+    
 
     void Text::SetCharacterUVs()
     {
@@ -123,16 +123,14 @@ namespace Engine
 
         for (int i = 0; i < 100; ++i)
         {
-            int row = (gridSize - 1) - (i / gridSize);
+            int row = (gridSize) - (i / gridSize);
             int col = i % gridSize;
 
-            // Flip the Y-axis correctly for top-left origin atlas
-            float xStart = col * charSize;       // Left
-            float yStart = (row + 1) * charSize; // Start from top to bottom (flip needed)
-            float xEnd = xStart + charSize;      // Right
-            float yEnd = yStart - charSize;      // Bottom (flip)
+            float xStart = col * charSize;
+            float yStart = row * charSize;
+            float xEnd = xStart + charSize;  
+            float yEnd = yStart - charSize; 
 
-            // Store the UV coordinates for the character
             CharUVs[i] = glm::vec4(xStart, yStart, xEnd, yEnd);
         }
     }
@@ -140,29 +138,24 @@ namespace Engine
     void Text::Render(const std::string &text)
     {
         float xOffset = 0.0f;
-        float Spacing = Scale/2; // Space width (adjust as needed)
+        float Spacing = Scale;
 
         for (char c : text)
         {
-            if (c == ' ') // Handle spaces
+            if (c == ' ')
             {
                 xOffset += Spacing;
                 continue;
             }
 
-            // Check if the character exists in the map
-            auto it = CharacterMap.find(std::string(1, c)); // Convert the char 'c' to a string
+            auto it = CharacterMap.find(std::string(1, c));
             if (it == CharacterMap.end())
             {
-                // Character is not found, you can handle it by skipping or using a placeholder character
                 std::cout << "Warning: Character '" << c << "' not found in the CharacterMap!" << std::endl;
-                // Skip or use a fallback character
-                c = '?'; // Fallback character
+                c = '?';
             }
 
-            // Get the index for the character (either from the map or fallback)
-            glm::vec4 uv = CharUVs[CharacterMap[std::string(1, c)]]; // Convert the char 'c' to a string
-          
+            glm::vec4 uv = CharUVs[CharacterMap[std::string(1, c)]];
             SpriteRenderer->SetSize(glm::vec2(Scale, Scale));
             SpriteRenderer->SetPosition(Position + glm::vec2(xOffset, 0));
             SpriteRenderer->SetUV(uv);

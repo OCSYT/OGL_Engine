@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <sstream> 
+#include <glm/glm.hpp>
 
 #include "util/util.h"
 #include "rendering/camera/camera.h"
@@ -18,7 +20,6 @@ unsigned int WindowHeight = 600;
 
 Engine::Camera MainCamera(Engine::Camera::CameraMode::Perspective, &WindowWidth, &WindowHeight);
 
-
 Engine::Material *SpriteMaterial;
 Engine::Sprite *TestSprite;
 
@@ -28,33 +29,26 @@ Engine::Material *Eye;
 Engine::Material *Glasses;
 Engine::Material *Hair;
 
-
 Engine::Material* FontMaterial;
 Engine::Text* UIText;
 
+float LastTime = 0.0f;  // Store the time of the last frame
+float DeltaTime = 0.0f; // Time between frames
+float FPS = 0.0f;       // Frames per second
+
 void InitText()
 {
-    FontMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/font/font.png"});
-    UIText = new Engine::Text(FontMaterial, glm::vec2(50, 50), 64.0f, &WindowWidth, &WindowHeight);
+    FontMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/font/arial.png"});
+    FontMaterial->SetUniform("Color", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+    UIText = new Engine::Text(FontMaterial, glm::vec2(0, 0), 32.0f, &WindowWidth, &WindowHeight);
 }
 
-void RenderText()
+void RenderText(const std::string& text)
 {
-    UIText->Render("Hello, World!");
-}
-
-void InitSprite()
-{
-    SpriteMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/sprite.png"});
-    TestSprite = new Engine::Sprite(SpriteMaterial, glm::vec2(0, 0), glm::vec2(0.0f, 0.0f), &WindowWidth, &WindowHeight);
-}
-
-void RenderSprite()
-{
-    float ScaleFactor = (WindowWidth < WindowHeight ? WindowWidth : WindowHeight) / 3.0f;
-    TestSprite->SetSize(glm::vec2(ScaleFactor, ScaleFactor));
-    TestSprite->SetPosition(glm::vec2(WindowWidth - ScaleFactor - 25.0f, 25.0f));
-    TestSprite->Render();
+    float ScaleFactor = (WindowWidth < WindowHeight ? WindowWidth : WindowHeight) / 10.0f;
+    UIText->SetPosition(glm::vec2(ScaleFactor/2,ScaleFactor/2));
+    UIText->SetScale(ScaleFactor/3);
+    UIText->Render(text.c_str());
 }
 
 void InitMarkiplier()
@@ -93,6 +87,17 @@ void RenderMarkiplier()
     Engine::Model::DrawMesh(MarkiplierModel, {Skin, Eye, Glasses, Hair}, ModelMatrix, &MainCamera);
 }
 
+void CalculateFPS()
+{
+    float currentTime = glfwGetTime();
+    DeltaTime = currentTime - LastTime;
+    LastTime = currentTime;
+
+    if (DeltaTime > 0.0f)
+    {
+        FPS = 1.0f / DeltaTime;  // FPS = 1 / DeltaTime
+    }
+}
 
 void Render(GLFWwindow *Window)
 {
@@ -103,8 +108,12 @@ void Render(GLFWwindow *Window)
     glEnable(GL_DEPTH_TEST);
 
     RenderMarkiplier();
-    RenderSprite();
-    RenderText();
+
+    CalculateFPS();
+    // Create a string showing the FPS and render it
+    std::stringstream ss;
+    ss << "FPS: " << static_cast<int>(FPS);
+    RenderText(ss.str());
 
     glfwSwapBuffers(Window);
 }
@@ -146,7 +155,6 @@ int main()
     }
     
     InitText();
-    InitSprite();
     InitMarkiplier();
     MainCamera.SetPosition(glm::vec3(0, 0, 1));
 
