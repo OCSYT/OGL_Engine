@@ -2,6 +2,7 @@
 
 Engine::Material::Material(const std::string& VertexPath, const std::string& FragmentPath, const std::vector<std::string>& TexturePaths) : Shader(VertexPath, FragmentPath) {
     LoadTextures(TexturePaths);
+    SetUniform("Color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 }
 
 Engine::Material::~Material() {

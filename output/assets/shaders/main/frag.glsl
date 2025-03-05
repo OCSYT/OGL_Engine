@@ -7,14 +7,21 @@ out vec4 OutColor;
 
 uniform sampler2D Texture;
 uniform bool UseTexture;
+uniform bool UseVertexColor;
+uniform vec4 Color;
 
 void main() {
+    vec4 FinalColor = Color;
+
     if (UseTexture) {
-        vec4 TextureColor = texture(Texture, TexCoord);
-        OutColor = TextureColor * vec4(VertexColor, 1.0);
-    } else {
-        OutColor = vec4(VertexColor, 1.0);
+        FinalColor *= texture(Texture, TexCoord);
     }
+
+    if (UseVertexColor) {
+        FinalColor *= vec4(VertexColor, 1.0);
+    }
+
+    OutColor = FinalColor;
 
     // Discard transparent fragments
     if (OutColor.a < 0.1) {
