@@ -14,7 +14,6 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
         return ModelMesh;
     }
 
-    // Loop through all meshes in the scene
     for (unsigned int MeshIndex = 0; MeshIndex < Scene->mNumMeshes; MeshIndex++) {
         aiMesh* AssimpMesh = Scene->mMeshes[MeshIndex];
 
@@ -27,7 +26,6 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
             aiVector3D Normal = AssimpMesh->HasNormals() ? AssimpMesh->mNormals[i] : aiVector3D(0, 0, 0);
             aiVector3D TexCoords = AssimpMesh->HasTextureCoords(0) ? AssimpMesh->mTextureCoords[0][i] : aiVector3D(0, 0, 0);
 
-            // Push position, texcoords, normal, extra vertex color data (default white)
             Vertices.insert(Vertices.end(), {
                 Pos.x, Pos.y, Pos.z,       // Position
                 TexCoords.x, TexCoords.y,  // Texture Coordinates
@@ -43,7 +41,6 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
             }
         }
 
-        // OpenGL buffer setup
         glGenVertexArrays(1, &Mesh.VAO);
         glGenBuffers(1, &Mesh.VBO);
         glGenBuffers(1, &Mesh.EBO);
@@ -56,7 +53,6 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Mesh.EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(unsigned int), Indices.data(), GL_STATIC_DRAW);
 
-        // Vertex attributes
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
