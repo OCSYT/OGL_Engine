@@ -135,7 +135,6 @@ void Render(GLFWwindow *Window)
     RenderTargetSprite->Render();
 
     CalculateFPS();
-    // Create a string showing the FPS and render it
     std::stringstream ss;
     ss << "FPS: " << static_cast<int>(FPS);
     RenderText(ss.str());
