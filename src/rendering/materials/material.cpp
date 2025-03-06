@@ -1,9 +1,24 @@
 #include "Material.h"
 
-Engine::Material::Material(const std::string& VertexPath, const std::string& FragmentPath, const std::vector<std::string>& TexturePaths) : Shader(VertexPath, FragmentPath) {
-    LoadTextures(TexturePaths);
+Engine::Material::Material(
+    const std::string& VertexPath,
+    const std::string& FragmentPath,
+    const std::vector<std::string>& TexturePaths,
+    const std::vector<std::pair<GLint, GLint>>& FilterOptions)
+    : Shader(VertexPath, FragmentPath)
+{
+    std::vector<std::pair<GLint, GLint>> ValidFilterOptions = FilterOptions;
+    if (ValidFilterOptions.empty()) {
+        ValidFilterOptions.resize(TexturePaths.size(), { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR });
+    } else if (ValidFilterOptions.size() < TexturePaths.size()) {
+        ValidFilterOptions.resize(TexturePaths.size(), { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR });
+    }
+
+    LoadTextures(TexturePaths, ValidFilterOptions);
     SetUniform("Color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 }
+
+
 
 Engine::Material::~Material() {
     UnloadTextures();
@@ -49,22 +64,23 @@ void Engine::Material::SetUniform(const std::string &Name, const glm::mat4 &Valu
     Shader.SetUniform(Name, Value);
 }
 
-void Engine::Material::LoadTexture(int Unit, const std::string& TexturePath) {
+void Engine::Material::LoadTexture(int Unit, const std::string& TexturePath, GLint MinFilter, GLint MagFilter) {
     if (Unit < 0 || Unit >= static_cast<int>(TextureIDs.size())) {        
         if (Unit >= static_cast<int>(TextureIDs.size())) {
             TextureIDs.resize(Unit + 1, 0);
         }
     }
 
-    // Load new texture into the texture unit
+    // Load new texture into the texture unit with filtering options
     Util::UnloadTexture(TextureIDs[Unit]);
-    unsigned int NewTextureID = Util::LoadTexture(TexturePath.c_str());
+    unsigned int NewTextureID = Util::LoadTexture(TexturePath.c_str(), MinFilter, MagFilter);
     if (NewTextureID) {
         glActiveTexture(GL_TEXTURE0 + Unit);
         glBindTexture(GL_TEXTURE_2D, NewTextureID);
         TextureIDs[Unit] = NewTextureID;
     }
 }
+
 
 
 void Engine::Material::SetTexture(int Unit, unsigned int TextureID) {
@@ -87,24 +103,43 @@ void Engine::Material::SetShader(const std::string& VertexPath, const std::strin
 }
 
 
-void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths, GLint MinFilter, GLint MagFilter) {
-    for (const std::string& TexturePath : TexturePaths) {
-        unsigned int TextureID = Util::LoadTexture(TexturePath, MinFilter, MagFilter);
+void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths, const std::vector<std::pair<GLint, GLint>>& FilterOptions) {
+    for (size_t i = 0; i < TexturePaths.size(); ++i) {
+        GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR;
+        GLint MagFilter = GL_LINEAR;
+
+        if (i < FilterOptions.size()) {
+            MinFilter = FilterOptions[i].first;
+            MagFilter = FilterOptions[i].second;
+        }
+
+        unsigned int TextureID = Util::LoadTexture(TexturePaths[i], MinFilter, MagFilter);
         if (TextureID) {
             TextureIDs.push_back(TextureID);
         }
     }
 }
 
+
+
+
 void Engine::Material::LoadTexturesFromData(
     const std::vector<std::tuple<const unsigned char*, int, int, int>>& TextureData,
-    GLint MinFilter, GLint MagFilter) 
+    const std::vector<std::pair<GLint, GLint>>& FilterOptions) 
 {
-    for (const auto& DataTuple : TextureData) {
+    for (size_t i = 0; i < TextureData.size(); ++i) {
+        const auto& DataTuple = TextureData[i];
         const unsigned char* Data = std::get<0>(DataTuple);
         int Width = std::get<1>(DataTuple);
         int Height = std::get<2>(DataTuple);
         int NumChannels = std::get<3>(DataTuple);
+
+        GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR;
+        GLint MagFilter = GL_LINEAR;
+        if (i < FilterOptions.size()) {
+            MinFilter = FilterOptions[i].first;
+            MagFilter = FilterOptions[i].second;
+        }
 
         unsigned int TextureID = Util::LoadTextureFromData(Data, Width, Height, NumChannels, MinFilter, MagFilter);
         if (TextureID) {
@@ -112,6 +147,7 @@ void Engine::Material::LoadTexturesFromData(
         }
     }
 }
+
 
 
 
@@ -132,16 +168,3 @@ void Engine::Material::RemoveTexture(int Index) {
     TextureIDs.erase(TextureIDs.begin() + Index);
 }
 
-
-void Engine::Material::ReloadTexture(int Index, const std::string& NewTexturePath) {
-    if (Index < 0 || Index >= static_cast<int>(TextureIDs.size())) {
-        std::cerr << "Invalid texture index!" << std::endl;
-        return;
-    }
-
-    unsigned int NewTextureID = Util::LoadTexture(NewTexturePath.c_str());
-    if (NewTextureID) {
-        Util::UnloadTexture(TextureIDs[Index]);
-        TextureIDs[Index] = NewTextureID;
-    }
-}

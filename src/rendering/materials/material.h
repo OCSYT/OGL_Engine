@@ -16,7 +16,11 @@ namespace Engine
     class Material
     {
     public:
-        Material(const std::string &VertexPath, const std::string &FragmentPath, const std::vector<std::string> &TexturePaths);
+        Material(
+            const std::string& VertexPath,
+            const std::string& FragmentPath,
+            const std::vector<std::string>& TexturePaths,
+            const std::vector<std::pair<GLint, GLint>>& FilterOptions = {}); 
 
         ~Material();
 
@@ -31,13 +35,12 @@ namespace Engine
         void SetTexture(int Unit, unsigned int TextureID);
         void LoadTexturesFromData(
             const std::vector<std::tuple<const unsigned char*, int, int, int>>& TextureData,
-            GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR);
-        void LoadTextures(const std::vector<std::string>& TexturePaths, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR);
-        void LoadTexture(int Unit, const std::string& TexturePath);
+            const std::vector<std::pair<GLint, GLint>>& FilterOptions);
+        void LoadTexture(int Unit, const std::string& TexturePath, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR);
+        void LoadTextures(const std::vector<std::string>& TexturePaths, const std::vector<std::pair<GLint, GLint>>& FilterOptions);
         void UnloadTextures();
         Shader* GetShader();
         void RemoveTexture(int Index);
-        void ReloadTexture(int Index, const std::string &NewTexturePath);
 
     private:
         Shader Shader;
