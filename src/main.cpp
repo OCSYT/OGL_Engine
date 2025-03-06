@@ -190,10 +190,19 @@ int main()
     }
 
     Engine::Model::UnloadMesh(MarkiplierModel);
+    
     delete Skin;
     delete Eye;
     delete Glasses;
     delete Hair;
+    delete FontMaterial;
+    delete RenderTargetMaterial;
+
+    delete UIText;
+    delete RenderTargetSprite;
+
+    delete SceneRenderTarget;
+
 
     glfwDestroyWindow(Window);
     glfwTerminate();
