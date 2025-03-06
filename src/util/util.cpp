@@ -7,7 +7,7 @@ std::string Engine::Util::GetExecutablePath() {
 }
 
 
-unsigned int Engine::Util::LoadTexture(std::string Path) {
+unsigned int Engine::Util::LoadTexture(std::string Path, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) {
     std::filesystem::path FullPath = std::filesystem::path(Util::GetExecutablePath()) / Path;
     std::string FullPathStr = FullPath.string();
     const char* FullPathString = FullPathStr.c_str();
@@ -16,11 +16,13 @@ unsigned int Engine::Util::LoadTexture(std::string Path) {
     glGenTextures(1, &TextureID);
     glBindTexture(GL_TEXTURE_2D, TextureID);
 
-    // Set texture wrapping/filtering options
+    // Set texture wrapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Apply user-defined filtering options
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MinFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MagFilter);
 
     // Load image data
     int Width, Height, NumChannels;
@@ -28,7 +30,10 @@ unsigned int Engine::Util::LoadTexture(std::string Path) {
     if (Data) {
         GLenum Format = (NumChannels == 4) ? GL_RGBA : GL_RGB;
         glTexImage2D(GL_TEXTURE_2D, 0, Format, Width, Height, 0, Format, GL_UNSIGNED_BYTE, Data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        
+        if (MinFilter == GL_LINEAR_MIPMAP_LINEAR || MinFilter == GL_NEAREST_MIPMAP_NEAREST || MinFilter == GL_NEAREST_MIPMAP_LINEAR || MinFilter == GL_LINEAR_MIPMAP_NEAREST) {
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
     } else {
         std::cerr << "Failed to load texture: " << Path << std::endl;
     }
@@ -37,15 +42,16 @@ unsigned int Engine::Util::LoadTexture(std::string Path) {
     return TextureID;
 }
 
-unsigned int Engine::Util::LoadTextureFromData(const unsigned char* Data, int Width, int Height, int NumChannels) {
+unsigned int Engine::Util::LoadTextureFromData(const unsigned char* Data, int Width, int Height, int NumChannels, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) {
     unsigned int TextureID;
     glGenTextures(1, &TextureID);
     glBindTexture(GL_TEXTURE_2D, TextureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MinFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MagFilter);
 
     GLenum Format = (NumChannels == 4) ? GL_RGBA : GL_RGB;
 
@@ -54,10 +60,14 @@ unsigned int Engine::Util::LoadTextureFromData(const unsigned char* Data, int Wi
     }
 
     glTexImage2D(GL_TEXTURE_2D, 0, Format, Width, Height, 0, Format, GL_UNSIGNED_BYTE, Data);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    
+    if (MinFilter == GL_LINEAR_MIPMAP_LINEAR || MinFilter == GL_NEAREST_MIPMAP_NEAREST || MinFilter == GL_NEAREST_MIPMAP_LINEAR || MinFilter == GL_LINEAR_MIPMAP_NEAREST) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
 
     return TextureID;
 }
+
 
 
 void Engine::Util::UnloadTexture(unsigned int& TextureID) {

@@ -87,30 +87,31 @@ void Engine::Material::SetShader(const std::string& VertexPath, const std::strin
 }
 
 
-void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths) {
+void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) {
     for (const std::string& TexturePath : TexturePaths) {
-        unsigned int TextureID = Util::LoadTexture(TexturePath);
+        unsigned int TextureID = Util::LoadTexture(TexturePath, MinFilter, MagFilter);
         if (TextureID) {
             TextureIDs.push_back(TextureID);
         }
     }
 }
 
-
-void Engine::Material::LoadTexturesFromData(const std::vector<std::tuple<const unsigned char*, int, int, int>>& TextureData) {
+void Engine::Material::LoadTexturesFromData(
+    const std::vector<std::tuple<const unsigned char*, int, int, int>>& TextureData,
+    GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) 
+{
     for (const auto& DataTuple : TextureData) {
         const unsigned char* Data = std::get<0>(DataTuple);
         int Width = std::get<1>(DataTuple);
         int Height = std::get<2>(DataTuple);
         int NumChannels = std::get<3>(DataTuple);
 
-        unsigned int TextureID = Util::LoadTextureFromData(Data, Width, Height, NumChannels);
+        unsigned int TextureID = Util::LoadTextureFromData(Data, Width, Height, NumChannels, MinFilter, MagFilter);
         if (TextureID) {
             TextureIDs.push_back(TextureID);
         }
     }
 }
-
 
 
 

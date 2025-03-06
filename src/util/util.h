@@ -30,8 +30,8 @@ namespace Engine
         };
 
         static std::string GetExecutablePath();
-        static unsigned int LoadTexture(std::string Path);
-        static unsigned int LoadTextureFromData(const unsigned char* Data, int Width, int Height, int NumChannels);
+        static unsigned int LoadTexture(std::string Path, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR);
+        static unsigned int LoadTextureFromData(const unsigned char* Data, int Width, int Height, int NumChannels, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR);
         static void UnloadTexture(unsigned int &TextureID);
     };
 };
