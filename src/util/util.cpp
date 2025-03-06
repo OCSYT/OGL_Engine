@@ -7,7 +7,7 @@ std::string Engine::Util::GetExecutablePath() {
 }
 
 
-unsigned int Engine::Util::LoadTexture(std::string Path, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) {
+unsigned int Engine::Util::LoadTexture(std::string Path, GLint MinFilter, GLint MagFilter) {
     std::filesystem::path FullPath = std::filesystem::path(Util::GetExecutablePath()) / Path;
     std::string FullPathStr = FullPath.string();
     const char* FullPathString = FullPathStr.c_str();
@@ -42,7 +42,7 @@ unsigned int Engine::Util::LoadTexture(std::string Path, GLint MinFilter = GL_LI
     return TextureID;
 }
 
-unsigned int Engine::Util::LoadTextureFromData(const unsigned char* Data, int Width, int Height, int NumChannels, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) {
+unsigned int Engine::Util::LoadTextureFromData(const unsigned char* Data, int Width, int Height, int NumChannels, GLint MinFilter, GLint MagFilter) {
     unsigned int TextureID;
     glGenTextures(1, &TextureID);
     glBindTexture(GL_TEXTURE_2D, TextureID);

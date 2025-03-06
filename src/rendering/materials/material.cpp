@@ -87,7 +87,7 @@ void Engine::Material::SetShader(const std::string& VertexPath, const std::strin
 }
 
 
-void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths, GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) {
+void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths, GLint MinFilter, GLint MagFilter) {
     for (const std::string& TexturePath : TexturePaths) {
         unsigned int TextureID = Util::LoadTexture(TexturePath, MinFilter, MagFilter);
         if (TextureID) {
@@ -98,7 +98,7 @@ void Engine::Material::LoadTextures(const std::vector<std::string>& TexturePaths
 
 void Engine::Material::LoadTexturesFromData(
     const std::vector<std::tuple<const unsigned char*, int, int, int>>& TextureData,
-    GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR, GLint MagFilter = GL_LINEAR) 
+    GLint MinFilter, GLint MagFilter) 
 {
     for (const auto& DataTuple : TextureData) {
         const unsigned char* Data = std::get<0>(DataTuple);
