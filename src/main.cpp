@@ -5,10 +5,11 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <sstream> 
+#include <sstream>
 #include <glm/glm.hpp>
 
 #include "util/util.h"
+#include "rendering/render_target/render_target.h"
 #include "rendering/camera/camera.h"
 #include "rendering/sprites/sprite.h"
 #include "rendering/materials/material.h"
@@ -20,6 +21,10 @@ unsigned int WindowHeight = 600;
 
 Engine::Camera MainCamera(Engine::Camera::CameraMode::Perspective, &WindowWidth, &WindowHeight);
 
+RenderTarget *SceneRenderTarget;
+Engine::Sprite *RenderTargetSprite;
+Engine::Material *RenderTargetMaterial;
+
 Engine::Material *SpriteMaterial;
 Engine::Sprite *TestSprite;
 
@@ -29,12 +34,21 @@ Engine::Material *Eye;
 Engine::Material *Glasses;
 Engine::Material *Hair;
 
-Engine::Material* FontMaterial;
-Engine::Text* UIText;
+Engine::Material *FontMaterial;
+Engine::Text *UIText;
 
 float LastTime = 0.0f;  // Store the time of the last frame
 float DeltaTime = 0.0f; // Time between frames
 float FPS = 0.0f;       // Frames per second
+
+void InitRenderTarget()
+{
+    SceneRenderTarget = new RenderTarget(glm::vec2(WindowWidth, WindowHeight));
+    RenderTargetMaterial = new Engine::Material("assets/shaders/main/vert.glsl",
+                                                "assets/shaders/main/frag.glsl",
+                                                {});
+    RenderTargetSprite = new Engine::Sprite(RenderTargetMaterial, glm::vec2(0,0), glm::vec2(0, 0), &WindowWidth, &WindowHeight);
+}
 
 void InitText()
 {
@@ -43,11 +57,11 @@ void InitText()
     UIText = new Engine::Text(FontMaterial, glm::vec2(0, 0), 32.0f, &WindowWidth, &WindowHeight);
 }
 
-void RenderText(const std::string& text)
+void RenderText(const std::string &text)
 {
     float ScaleFactor = (WindowWidth < WindowHeight ? WindowWidth : WindowHeight) / 10.0f;
-    UIText->SetPosition(glm::vec2(ScaleFactor/2,ScaleFactor/2));
-    UIText->SetScale(ScaleFactor/3);
+    UIText->SetPosition(glm::vec2(ScaleFactor / 2, ScaleFactor / 2));
+    UIText->SetScale(ScaleFactor / 3);
     UIText->Render(text.c_str());
 }
 
@@ -95,7 +109,7 @@ void CalculateFPS()
 
     if (DeltaTime > 0.0f)
     {
-        FPS = 1.0f / DeltaTime;  // FPS = 1 / DeltaTime
+        FPS = 1.0f / DeltaTime; // FPS = 1 / DeltaTime
     }
 }
 
@@ -103,11 +117,22 @@ void Render(GLFWwindow *Window)
 {
     glfwPollEvents();
 
+    SceneRenderTarget->Resize(glm::vec2(WindowWidth, WindowHeight));
+    SceneRenderTarget->Bind();
+
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Set background color
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
     RenderMarkiplier();
+
+    SceneRenderTarget->Unbind();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->Texture);
+    RenderTargetSprite->SetSize(glm::vec2(WindowWidth, WindowHeight));
+    RenderTargetSprite->Render();
 
     CalculateFPS();
     // Create a string showing the FPS and render it
@@ -153,7 +178,8 @@ int main()
         glfwTerminate();
         return -1;
     }
-    
+
+    InitRenderTarget();
     InitText();
     InitMarkiplier();
     MainCamera.SetPosition(glm::vec3(0, 0, 1));

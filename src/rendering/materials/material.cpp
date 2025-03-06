@@ -68,7 +68,6 @@ void Engine::Material::LoadTexture(int Unit, const std::string& TexturePath) {
 
 
 void Engine::Material::SetTexture(int Unit, unsigned int TextureID) {
-    std::cout << "Binding texture " << TextureID << " to unit " << Unit << std::endl;
     if (Unit < 0 || Unit >= static_cast<int>(TextureIDs.size())) {        
         if (Unit >= static_cast<int>(TextureIDs.size())) {
             TextureIDs.resize(Unit + 1, 0);
