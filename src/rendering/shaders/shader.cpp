@@ -157,3 +157,26 @@ void Engine::Shader::SetUniform(const std::string &name, const glm::vec4 &value)
 void Engine::Shader::SetUniform(const std::string &name, const glm::mat4 &value) {
     glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 }
+void Engine::Shader::ListUniforms() {
+    if (ID == 0) {
+        std::cerr << "Error: Trying to list uniforms from an invalid shader program!" << std::endl;
+        return;
+    }
+
+    // Get the number of uniforms
+    int uniformCount = 0;
+    glGetProgramiv(ID, GL_ACTIVE_UNIFORMS, &uniformCount);
+
+    // Loop through all uniforms
+    for (int i = 0; i < uniformCount; ++i) {
+        char uniformName[256];
+        int size;
+        GLenum type;
+
+        // Get information about the uniform
+        glGetActiveUniform(ID, i, sizeof(uniformName), nullptr, &size, &type, uniformName);
+
+        // Print the uniform name
+        std::cout << "Uniform " << i << ": " << uniformName << std::endl;
+    }
+}

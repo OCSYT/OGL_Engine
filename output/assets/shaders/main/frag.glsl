@@ -14,6 +14,7 @@ layout(location = 4) out float OutMetallic;
 layout(location = 5) out float OutRoughnesss;
 layout(location = 6) out vec3 OutEmission;
 
+
 uniform sampler2D Texture;
 uniform sampler2D EmissionTexture;
 uniform sampler2D MetallicTexture;
@@ -39,7 +40,7 @@ void main() {
 
     OutColor = FinalColor;
 
-    if (OutColor.a < 0.1) {
+    if (OutColor.a < 0.01) {
         discard;
     }
 
