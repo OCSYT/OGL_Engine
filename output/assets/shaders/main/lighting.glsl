@@ -94,7 +94,7 @@ void main() {
     vec3 Normal = texture(NormalTexture, TexCoord).rgb;
     vec3 Position = texture(PositionTexture, TexCoord).rgb;
     float Metallic = clamp(texture(MetallicTexture, TexCoord).r, 0.0, 1.0);
-    float Roughness = clamp(texture(RoughnessTexture, TexCoord).r, 0.05, 1.0);
+    float Roughness = clamp(1.0 - texture(RoughnessTexture, TexCoord).r, 0.05, 1.0);
     vec3 Emission = texture(EmissionTexture, TexCoord).rgb;
 
     vec3 V = normalize(ViewPosition - Position);
