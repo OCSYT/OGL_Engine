@@ -12,7 +12,7 @@ public:
     GLuint AlbedoTexture;
     GLuint NormalTexture;
     GLuint PositionTexture;
-    GLuint SpecularTexture;
+    GLuint RoughnessTexture;
     GLuint MetallicTexture;
     GLuint EmissionTexture;
     GLuint DepthTexture;

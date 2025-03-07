@@ -40,12 +40,12 @@ RenderTarget::RenderTarget(glm::vec2 Size) : TargetSize(Size)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, MetallicTexture, 0);
 
-    glGenTextures(1, &SpecularTexture);
-    glBindTexture(GL_TEXTURE_2D, SpecularTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
+    glGenTextures(1, &RoughnessTexture);
+    glBindTexture(GL_TEXTURE_2D, RoughnessTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, TargetSize.x, TargetSize.y, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, SpecularTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, RoughnessTexture, 0);
 
     glGenTextures(1, &EmissionTexture);
     glBindTexture(GL_TEXTURE_2D, EmissionTexture);
@@ -78,7 +78,7 @@ RenderTarget::~RenderTarget()
     glDeleteTextures(1, &NormalTexture);
     glDeleteTextures(1, &PositionTexture);
     glDeleteTextures(1, &MetallicTexture);
-    glDeleteTextures(1, &SpecularTexture);
+    glDeleteTextures(1, &RoughnessTexture);
     glDeleteTextures(1, &EmissionTexture);
     glDeleteTextures(1, &DepthTexture);
     glDeleteRenderbuffers(1, &RBO);
@@ -111,8 +111,8 @@ void RenderTarget::Resize(glm::vec2 Size)
     glBindTexture(GL_TEXTURE_2D, MetallicTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, TargetSize.x, TargetSize.y, 0, GL_RED, GL_FLOAT, nullptr);
 
-    glBindTexture(GL_TEXTURE_2D, SpecularTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, RoughnessTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, TargetSize.x, TargetSize.y, 0, GL_RED, GL_FLOAT, nullptr);
 
     glBindTexture(GL_TEXTURE_2D, EmissionTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);

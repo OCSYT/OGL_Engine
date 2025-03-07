@@ -11,18 +11,18 @@ layout(location = 1) out vec3 OutFragNormal;
 layout(location = 2) out vec3 OutFragPosition;
 layout(location = 3) out float OutDepth;
 layout(location = 4) out float OutMetallic;
-layout(location = 5) out vec3 OutSpecular;
+layout(location = 5) out float OutRoughnesss;
 layout(location = 6) out vec3 OutEmission;
 
 uniform sampler2D Texture;
 uniform sampler2D EmissionTexture;
 uniform sampler2D MetallicTexture;
-uniform sampler2D SpecularTexture;
+uniform sampler2D RoughnessTexture;
 uniform bool UseVertexColor;
 uniform bool UseTexture;
 uniform bool UseEmission;
 uniform bool UseMetallic;
-uniform bool UseSpecular;
+uniform bool UseRoughness;
 uniform vec4 Color;
 
 void main() {
@@ -44,18 +44,18 @@ void main() {
     }
 
     float metallic = 0.0;
-    vec3 specular = vec3(0);
+    float roughness = 0.0;
 
     if (UseMetallic) {
         metallic = texture(MetallicTexture, TexCoord).r;
     }
 
-    if (UseSpecular) {
-        specular = texture(SpecularTexture, TexCoord).rgb;
+    if (UseRoughness) {
+        roughness = texture(RoughnessTexture, TexCoord).r;
     }
 
     OutMetallic = metallic;
-    OutSpecular = specular;
+    OutRoughnesss = roughness;
 
     OutFragNormal = normalize(FragNormal);
     OutFragPosition = FragPos;
