@@ -28,6 +28,7 @@ namespace Engine
 
         void SetUniform(const std::string &Name, int Value);
         void SetUniform(const std::string &Name, float Value);
+        void SetUniform(const std::string &Name, const glm::vec2 &Value);
         void SetUniform(const std::string &Name, const glm::vec3 &Value);
         void SetUniform(const std::string &Name, const glm::vec4 &Value);
         void SetUniform(const std::string &Name, const glm::mat4 &Value);

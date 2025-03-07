@@ -49,6 +49,12 @@ void Engine::Material::SetUniform(const std::string &Name, float Value) {
     Shader.SetUniform(Name, Value);
 }
 
+
+void Engine::Material::SetUniform(const std::string &Name, const glm::vec2 &Value) {
+    Shader.Bind();
+    Shader.SetUniform(Name, Value);
+}
+
 void Engine::Material::SetUniform(const std::string &Name, const glm::vec3 &Value) {
     Shader.Bind();
     Shader.SetUniform(Name, Value);
