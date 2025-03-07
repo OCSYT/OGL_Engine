@@ -5,19 +5,56 @@ RenderTarget::RenderTarget(glm::vec2 Size) : TargetSize(Size)
     glGenFramebuffers(1, &FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-    // Create texture
-    glGenTextures(1, &Texture);
-    glBindTexture(GL_TEXTURE_2D, Texture);
+    // Create color textures (for G-buffer)
+    // Albedo texture
+    glGenTextures(1, &AlbedoTexture);
+    glBindTexture(GL_TEXTURE_2D, AlbedoTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, AlbedoTexture, 0);
 
-    // Create Renderbuffer for depth and stencil
+    // Normal texture (using GL_RGB16F to store floating-point normals)
+    glGenTextures(1, &NormalTexture);
+    glBindTexture(GL_TEXTURE_2D, NormalTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, NormalTexture, 0);
+
+    // Position texture (using GL_RGB16F to store floating-point world positions)
+    glGenTextures(1, &PositionTexture);
+    glBindTexture(GL_TEXTURE_2D, PositionTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, PositionTexture, 0);
+
+    // Metallic texture (using GL_R16F for a single channel)
+    glGenTextures(1, &MetallicTexture);
+    glBindTexture(GL_TEXTURE_2D, MetallicTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, TargetSize.x, TargetSize.y, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, MetallicTexture, 0);
+
+    // Specular texture (using GL_RGB16F to store floating-point specular data)
+    glGenTextures(1, &SpecularTexture);
+    glBindTexture(GL_TEXTURE_2D, SpecularTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, SpecularTexture, 0);
+
+    // Create depth and stencil buffer
     glGenRenderbuffers(1, &RBO);
     glBindRenderbuffer(GL_RENDERBUFFER, RBO);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, TargetSize.x, TargetSize.y);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+    // Specify the color attachments
+    GLuint attachments[5] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
+    glDrawBuffers(5, attachments);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cerr << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
@@ -28,7 +65,11 @@ RenderTarget::RenderTarget(glm::vec2 Size) : TargetSize(Size)
 RenderTarget::~RenderTarget()
 {
     glDeleteFramebuffers(1, &FBO);
-    glDeleteTextures(1, &Texture);
+    glDeleteTextures(1, &AlbedoTexture);
+    glDeleteTextures(1, &NormalTexture);
+    glDeleteTextures(1, &PositionTexture);
+    glDeleteTextures(1, &MetallicTexture);
+    glDeleteTextures(1, &SpecularTexture);
     glDeleteRenderbuffers(1, &RBO);
 }
 
@@ -45,11 +86,22 @@ void RenderTarget::Unbind()
 
 void RenderTarget::Resize(glm::vec2 Size)
 {
-
     TargetSize = Size;
 
-    glBindTexture(GL_TEXTURE_2D, Texture);
+    glBindTexture(GL_TEXTURE_2D, AlbedoTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+    glBindTexture(GL_TEXTURE_2D, NormalTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
+
+    glBindTexture(GL_TEXTURE_2D, PositionTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
+
+    glBindTexture(GL_TEXTURE_2D, MetallicTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, TargetSize.x, TargetSize.y, 0, GL_RED, GL_FLOAT, nullptr);
+
+    glBindTexture(GL_TEXTURE_2D, SpecularTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, TargetSize.x, TargetSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
 
     glBindRenderbuffer(GL_RENDERBUFFER, RBO);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, TargetSize.x, TargetSize.y);

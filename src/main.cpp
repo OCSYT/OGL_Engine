@@ -130,7 +130,7 @@ void Render(GLFWwindow *Window)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->Texture);
+    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->AlbedoTexture);
     RenderTargetSprite->SetSize(glm::vec2(WindowWidth, WindowHeight));
     RenderTargetSprite->Render();
 
