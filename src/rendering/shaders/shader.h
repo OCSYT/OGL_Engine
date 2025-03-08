@@ -9,8 +9,6 @@
 #include <iostream>
 #include <unordered_map>
 #include <glad/glad.h>
-#include <filesystem>
-#include <windows.h>
 #include "../../util/util.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
