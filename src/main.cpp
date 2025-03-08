@@ -72,9 +72,6 @@ void InitMarkiplier()
                                 "assets/shaders/main/frag.glsl",
                                 {"assets/textures/Markiplier/Skin.png"});
     Skin->SetUniform("UseTexture", true);
-    // Skin->SetSortOrder(0);
-    // Skin->SetBlendingMode(Engine::Material::BlendingMode::AlphaBlend);
-    // Skin->SetDepthSortingMode(Engine::Material::DepthSortingMode::Opaque);
 
     Eye = new Engine::Material("assets/shaders/main/vert.glsl",
                                "assets/shaders/main/frag.glsl",
