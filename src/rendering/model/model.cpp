@@ -78,21 +78,30 @@ void Engine::Model::DrawModel(const MeshData& Mesh, Material* MaterialPtr, const
 
     switch (MaterialPtr->GetDepthSortingMode()) {
         case Material::DepthSortingMode::Opaque:
-            glDepthMask(GL_TRUE);
+            // Enable depth writing for opaque objects
+            glEnable(GL_DEPTH_TEST);
+            glDepthMask(GL_TRUE);  // Allow depth writing
             break;
-
+    
         case Material::DepthSortingMode::Transparent:
-            glDepthMask(GL_FALSE);
+            // Disable depth writing for transparent objects
+            glEnable(GL_DEPTH_TEST);  // Enable depth testing
+            glDepthMask(GL_FALSE);    // Disallow depth writing
             break;
-
+    
         case Material::DepthSortingMode::Read:
-            glDepthMask(GL_FALSE);
+            // Disable depth writing but keep depth testing
+            glEnable(GL_DEPTH_TEST);  // Enable depth testing
+            glDepthMask(GL_FALSE);    // Disallow depth writing
             break;
-
+    
         case Material::DepthSortingMode::None:
-            glDepthMask(GL_FALSE);
+            // Disable both depth testing and writing
+            glDisable(GL_DEPTH_TEST);  // Disable depth testing
+            glDepthMask(GL_FALSE);     // Disallow depth writing
             break;
     }
+    
 
     glBindVertexArray(Mesh.VAO);
     glDrawElements(GL_TRIANGLES, Mesh.IndexCount, GL_UNSIGNED_INT, 0);

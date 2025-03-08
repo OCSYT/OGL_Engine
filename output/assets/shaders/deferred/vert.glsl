@@ -9,6 +9,8 @@ out vec2 TexCoord;
 out vec3 VertexColor;
 out vec3 FragNormal;
 out vec3 FragPos;
+out vec4 FragPosClip;
+
 
 uniform mat4 Model;
 uniform mat4 View;
@@ -21,4 +23,5 @@ void main() {
     FragPos = vec3(Model * vec4(APos, 1.0));
 
     gl_Position = Projection * View * Model * vec4(APos, 1.0);
+    FragPosClip = gl_Position;
 }

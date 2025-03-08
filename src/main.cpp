@@ -44,8 +44,8 @@ float FPS = 0.0f;       // Frames per second
 void InitRenderTarget()
 {
     SceneRenderTarget = new RenderTarget(glm::vec2(WindowWidth, WindowHeight));
-    RenderTargetMaterial = new Engine::Material("assets/shaders/main/vert.glsl",
-                                                "assets/shaders/main/lighting.glsl",
+    RenderTargetMaterial = new Engine::Material("assets/shaders/deferred/vert.glsl",
+                                                "assets/shaders/deferred/lighting.glsl",
                                                 {});
     RenderTargetSprite = new Engine::Sprite(RenderTargetMaterial, glm::vec2(0, 0), glm::vec2(0, 0), &WindowWidth, &WindowHeight);
 }
@@ -68,27 +68,27 @@ void RenderText(const std::string &text)
 void InitMarkiplier()
 {
 
-    Skin = new Engine::Material("assets/shaders/main/vert.glsl",
-                                "assets/shaders/main/frag.glsl",
+    Skin = new Engine::Material("assets/shaders/deferred/vert.glsl",
+                                "assets/shaders/deferred/frag.glsl",
                                 {"assets/textures/Markiplier/Skin.png"});
     Skin->SetUniform("UseTexture", true);
 
-    Eye = new Engine::Material("assets/shaders/main/vert.glsl",
-                               "assets/shaders/main/frag.glsl",
+    Eye = new Engine::Material("assets/shaders/deferred/vert.glsl",
+                               "assets/shaders/deferred/frag.glsl",
                                {"assets/textures/Markiplier/Eye.png"});
 
     Eye->SetUniform("UseTexture", true);
 
-    Glasses = new Engine::Material("assets/shaders/main/vert.glsl",
-                                   "assets/shaders/main/frag.glsl",
+
+    Glasses = new Engine::Material("assets/shaders/deferred/vert.glsl",
+                                   "assets/shaders/deferred/frag.glsl",
                                    {});
 
     Glasses->SetUniform("Color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-    Hair = new Engine::Material("assets/shaders/main/vert.glsl",
-                                "assets/shaders/main/frag.glsl",
+    Hair = new Engine::Material("assets/shaders/deferred/vert.glsl",
+                                "assets/shaders/deferred/frag.glsl",
                                 {"assets/textures/Markiplier/Hair.png"});
-
     Hair->SetUniform("UseTexture", true);
 
     MarkiplierModel = new Engine::Model::ModelInstance(
@@ -168,14 +168,12 @@ void Render(GLFWwindow *Window)
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f); 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
     RenderMarkiplier();
 
     SceneRenderTarget->Unbind();
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Set background color
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->AlbedoTexture);
