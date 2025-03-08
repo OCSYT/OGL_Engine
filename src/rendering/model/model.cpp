@@ -1,6 +1,5 @@
 #include "model.h"
 
-
 Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
     std::filesystem::path FullPath = std::filesystem::path(Util::GetExecutablePath()) / Path;
     std::string FullPathStr = FullPath.string();
@@ -11,7 +10,6 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
     Mesh ModelMesh;
 
     if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode) {
-        std::cerr << "ERROR::ASSIMP::" << Importer.GetErrorString() << std::endl;
         return ModelMesh;
     }
 
@@ -70,7 +68,6 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
 
 void Engine::Model::DrawModel(const MeshData& Mesh, Material* MaterialPtr, const glm::mat4& ModelMatrix, Camera* MainCamera) {
     if (!MaterialPtr || !MainCamera) {
-        std::cerr << "DrawModel: Invalid material or camera pointer!" << std::endl;
         return;
     }
 
@@ -108,32 +105,26 @@ void Engine::Model::DrawModel(const MeshData& Mesh, Material* MaterialPtr, const
     }
 }
 
-
 void Engine::Model::DrawMesh(const Mesh& ModelMesh, const std::vector<Material*>& Materials, const glm::mat4& ModelMatrix, Camera* MainCamera) {
     if (Materials.empty() || !MainCamera) {
-        std::cerr << "DrawMesh: Invalid material list or camera!" << std::endl;
         return;
     }
 
-    std::vector<std::pair<int, size_t>> SortedMeshes; // Now using the sort index
+    std::vector<std::pair<int, size_t>> SortedMeshes;
 
     for (size_t i = 0; i < ModelMesh.Meshes.size(); ++i) {
         Material* MaterialPtr = (i < Materials.size()) ? Materials[i] : Materials.back();
 
-        // Use the material sort index to decide sorting order
         int SortIndex = MaterialPtr->GetSortOrder();
         
-        // Collect meshes along with their material's sort index
         SortedMeshes.emplace_back(SortIndex, i);
     }
 
-    // Sort meshes based on material sort index (ascending order)
     std::sort(SortedMeshes.begin(), SortedMeshes.end(), 
               [](const std::pair<int, size_t>& A, const std::pair<int, size_t>& B) {
-                  return A.first < B.first;  // Sort by sort index
+                  return A.first < B.first;
               });
 
-    // Render meshes in sorted order
     for (const auto& [_, i] : SortedMeshes) {
         Material* MaterialPtr = (i < Materials.size()) ? Materials[i] : Materials.back();
         DrawModel(ModelMesh.Meshes[i], MaterialPtr, ModelMatrix, MainCamera);
@@ -142,11 +133,10 @@ void Engine::Model::DrawMesh(const Mesh& ModelMesh, const std::vector<Material*>
 
 void Engine::Model::DrawModelInstances(const std::vector<ModelInstance>& ModelInstances, Camera* MainCamera) {
     if (!MainCamera) {
-        std::cerr << "DrawMeshes: Camera pointer is null!" << std::endl;
         return;
     }
 
-    std::vector<std::tuple<int, const MeshData*, Material*, glm::mat4>> SortedMeshes; // Use sort index
+    std::vector<std::tuple<int, const MeshData*, Material*, glm::mat4>> SortedMeshes;
 
     for (const auto& Instance : ModelInstances) {
         const Mesh& ModelMesh = Instance.ModelMesh;
@@ -155,33 +145,41 @@ void Engine::Model::DrawModelInstances(const std::vector<ModelInstance>& ModelIn
         for (size_t i = 0; i < ModelMesh.Meshes.size(); ++i) {
             Material* MaterialPtr = (i < Instance.Materials.size()) ? Instance.Materials[i] : Instance.Materials.back();
 
-            // Use the material sort index to decide sorting order
             int SortIndex = MaterialPtr->GetSortOrder();
 
-            // Collect meshes along with their material's sort index
             SortedMeshes.emplace_back(SortIndex, &ModelMesh.Meshes[i], MaterialPtr, ModelMatrix);
         }
     }
 
-    // Sort meshes based on material sort index (ascending order)
     std::sort(SortedMeshes.begin(), SortedMeshes.end(), 
-              [](const auto& A, const auto& B) {
-                  return std::get<0>(A) < std::get<0>(B);  // Sort by sort index
+              [MainCamera](const auto& A, const auto& B) {
+                  int SortIndexA = std::get<0>(A);
+                  int SortIndexB = std::get<0>(B);
+                  
+                  // First, compare the SortIndex
+                  if (SortIndexA != SortIndexB) {
+                      return SortIndexA < SortIndexB;
+                  }
+                  
+                  // If SortIndex is the same, compare by distance to the camera
+                  glm::vec3 ModelPosA = glm::vec3(std::get<3>(A)[3]);
+                  glm::vec3 ModelPosB = glm::vec3(std::get<3>(B)[3]);
+                  float DistanceA = glm::length(ModelPosA - MainCamera->GetPosition());
+                  float DistanceB = glm::length(ModelPosB - MainCamera->GetPosition());
+
+                  return DistanceA < DistanceB;
               });
 
-    // Render meshes in sorted order
     for (const auto& [_, Mesh, MaterialPtr, ModelMatrix] : SortedMeshes) {
         DrawModel(*Mesh, MaterialPtr, ModelMatrix, MainCamera);
     }
 }
-
 
 void Engine::Model::UnloadModelInstance(ModelInstance& instance) {
     UnloadMesh(instance.ModelMesh);
     instance.Materials.clear();
     delete &instance;
 }
-
 
 void Engine::Model::UnloadMesh(Mesh& ModelMesh) {
     for (MeshData& Mesh : ModelMesh.Meshes) {
