@@ -82,5 +82,6 @@
         "cinttypes": "cpp",
         "variant": "cpp",
         "semaphore": "cpp"
-    }
+    },
+    "cmake.ignoreCMakeListsMissing": true
 }
