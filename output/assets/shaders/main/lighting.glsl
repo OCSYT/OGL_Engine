@@ -96,17 +96,16 @@ void main() {
     vec3 Normal = texture(NormalTexture, TexCoord).rgb;
     vec3 Position = texture(PositionTexture, TexCoord).rgb;
 
-    // Check if normal and position data are invalid (e.g., check if they are zero)
+
     bool hasNormal = length(Normal) > 0.0;
     bool hasPosition = length(Position) > 0.0;
 
     if (!hasNormal || !hasPosition) {
-        // If no normal or position, use full albedo color (simple color output)
         OutColor = vec4(Albedo, Alpha);
         return;
     }
 
-    // Fetch other textures
+
     float Metallic = clamp(texture(MetallicTexture, TexCoord).r, 0.0, 1.0);
     float Roughness = clamp(1.0 - texture(RoughnessTexture, TexCoord).r, 0.05, 1.0);
     vec3 Emission = texture(EmissionTexture, TexCoord).rgb;
@@ -191,11 +190,9 @@ void main() {
         Lo += (kD * Albedo / PI + specular) * radiance * NdotL;
     }
 
-    // Ambient term
     vec3 ambient = vec3(0.03) * Albedo * (1.0 - Metallic);
     vec3 color = ambient + Lo + Emission;
 
-    // Tonemapping and Gamma Correction
     color = ACESFittedTonemap(color);
     color = GammaCorrect(color, 2.2);
 
