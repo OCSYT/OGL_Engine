@@ -32,11 +32,11 @@ struct SpotLight {
 };
 
 uniform int NumPointLights;
-uniform PointLight PointLights[128];
+uniform PointLight PointLights[256];
 uniform int NumDirectionalLights;
-uniform DirectionalLight DirectionalLights[128];
+uniform DirectionalLight DirectionalLights[256];
 uniform int NumSpotLights;
-uniform SpotLight SpotLights[128];
+uniform SpotLight SpotLights[256];
 uniform vec3 ViewPosition;
 
 const float PI = 3.14159265359;
