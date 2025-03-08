@@ -83,6 +83,7 @@ vec3 GammaCorrect(vec3 color, float gamma) {
 }
 
 void main() {
+    // Sample textures
     vec4 AlbedoSample = texture(AlbedoTexture, TexCoord);
     vec3 Albedo = AlbedoSample.rgb;
     float Alpha = AlbedoSample.a;
@@ -91,8 +92,21 @@ void main() {
         discard;
     }
 
+    // Attempt to fetch Normal and Position data
     vec3 Normal = texture(NormalTexture, TexCoord).rgb;
     vec3 Position = texture(PositionTexture, TexCoord).rgb;
+
+    // Check if normal and position data are invalid (e.g., check if they are zero)
+    bool hasNormal = length(Normal) > 0.0;
+    bool hasPosition = length(Position) > 0.0;
+
+    if (!hasNormal || !hasPosition) {
+        // If no normal or position, use full albedo color (simple color output)
+        OutColor = vec4(Albedo, Alpha);
+        return;
+    }
+
+    // Fetch other textures
     float Metallic = clamp(texture(MetallicTexture, TexCoord).r, 0.0, 1.0);
     float Roughness = clamp(1.0 - texture(RoughnessTexture, TexCoord).r, 0.05, 1.0);
     vec3 Emission = texture(EmissionTexture, TexCoord).rgb;
@@ -147,7 +161,7 @@ void main() {
         Lo += (kD * Albedo / PI + specular) * radiance * NdotL;
     }
 
-    // Spotlight loop (added)
+    // Spotlight loop
     for (int i = 0; i < min(NumSpotLights, 128); i++) {
         vec3 L = normalize(SpotLights[i].Position - Position);
         vec3 H = normalize(V + L);

@@ -28,7 +28,7 @@ Engine::Material *RenderTargetMaterial;
 Engine::Material *SpriteMaterial;
 Engine::Sprite *TestSprite;
 
-Engine::Model::Mesh MarkiplierModel;
+Engine::Model::ModelInstance* MarkiplierModel;
 Engine::Material *Skin;
 Engine::Material *Eye;
 Engine::Material *Glasses;
@@ -67,12 +67,14 @@ void RenderText(const std::string &text)
 
 void InitMarkiplier()
 {
-    MarkiplierModel = Engine::Model::LoadMesh("assets/models/Markiplier.obj");
 
     Skin = new Engine::Material("assets/shaders/main/vert.glsl",
                                 "assets/shaders/main/frag.glsl",
                                 {"assets/textures/Markiplier/Skin.png"});
     Skin->SetUniform("UseTexture", true);
+    // Skin->SetSortOrder(0);
+    // Skin->SetBlendingMode(Engine::Material::BlendingMode::AlphaBlend);
+    // Skin->SetDepthSortingMode(Engine::Material::DepthSortingMode::Opaque);
 
     Eye = new Engine::Material("assets/shaders/main/vert.glsl",
                                "assets/shaders/main/frag.glsl",
@@ -91,14 +93,21 @@ void InitMarkiplier()
                                 {"assets/textures/Markiplier/Hair.png"});
 
     Hair->SetUniform("UseTexture", true);
+
+    MarkiplierModel = new Engine::Model::ModelInstance(
+        Engine::Model::LoadMesh("assets/models/Markiplier.obj"),
+        {Skin, Eye, Glasses, Hair},
+        glm::mat4(1.0f)
+    );
 }
 
 void RenderMarkiplier()
 {
     glm::mat4 ModelMatrix = glm::rotate(glm::mat4(1.0f), static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
     ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, -0.25f, 0.0f));
+    MarkiplierModel->Transform = ModelMatrix;
 
-    Engine::Model::DrawMesh(MarkiplierModel, {Skin, Eye, Glasses, Hair}, ModelMatrix, &MainCamera);
+    Engine::Model::DrawModelInstances({*MarkiplierModel}, &MainCamera);
 }
 
 void CalculateFPS()
@@ -277,7 +286,7 @@ int main()
         Render(Window);
     }
 
-    Engine::Model::UnloadMesh(MarkiplierModel);
+    Engine::Model::UnloadModelInstance(*MarkiplierModel);
 
     delete Skin;
     delete Eye;
