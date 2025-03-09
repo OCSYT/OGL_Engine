@@ -74,50 +74,6 @@ void Engine::Sprite::Render()
     if (*ScreenHeight == 0)
         return; 
 
-    GLboolean depthEnabled;
-    glGetBooleanv(GL_DEPTH_TEST, &depthEnabled);
-
-    GLboolean depthMaskEnabled;
-    glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
-
-    // Handle Depth Sorting
-    switch (MaterialInstance->GetDepthSortingMode()) {
-        case Material::DepthSortingMode::Opaque:
-            glEnable(GL_DEPTH_TEST);  // Enable depth testing for opaque objects
-            glDepthMask(GL_TRUE); // Enable depth writing for opaque objects
-            break;
-        case Material::DepthSortingMode::Transparent:
-            glDisable(GL_DEPTH_TEST); // Disable depth testing for transparent objects
-            break;
-        case Material::DepthSortingMode::Read:
-            // Depth testing enabled but not writing depth
-            glEnable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE); // Disable depth writing for transparency effects
-            break;
-        case Material::DepthSortingMode::None:
-            glDisable(GL_DEPTH_TEST); // No depth testing at all
-            break;
-    }
-
-    // Handle Blending
-    switch (MaterialInstance->GetBlendingMode()) {
-        case Material::BlendingMode::None:
-            glDisable(GL_BLEND);  // Disable blending
-            break;
-        case Material::BlendingMode::AlphaBlend:
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Standard alpha blending
-            break;
-        case Material::BlendingMode::Additive:
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);  // Additive blending
-            break;
-        case Material::BlendingMode::Multiply:
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_DST_COLOR, GL_ZERO);  // Multiply blending
-            break;
-    }
-
     glm::mat4 view = glm::mat4(1);
     glm::mat4 projection = glm::ortho(
         0.0f, static_cast<float>(*ScreenWidth),
@@ -136,18 +92,6 @@ void Engine::Sprite::Render()
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    // Restore previous depth state
-    if (depthEnabled) {
-        glEnable(GL_DEPTH_TEST);
-    } else {
-        glDisable(GL_DEPTH_TEST);
-    }
-
-    // Restore depth mask if it was changed
-    if (depthMaskEnabled != GL_TRUE) {
-        glDepthMask(GL_TRUE); // Re-enable depth writing
-    }
 }
 
 void Engine::Sprite::SetPosition(const glm::vec2 &position)

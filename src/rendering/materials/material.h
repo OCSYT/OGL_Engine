@@ -30,6 +30,12 @@ namespace Engine
             Additive,
             Multiply
         };
+        enum class CullingMode
+        {
+            Back,
+            Front,
+            None
+        };
 
         Material(const std::string &VertexPath, const std::string &FragmentPath,
                  const std::vector<std::string> &TexturePaths = {},
@@ -60,6 +66,9 @@ namespace Engine
         void SetBlendingMode(BlendingMode Mode);
         BlendingMode GetBlendingMode() const;
 
+        void SetCullingMode(CullingMode Mode);
+        CullingMode GetCullingMode() const;
+
         void SetSortOrder(int Order);
         int GetSortOrder() const;
 
@@ -68,6 +77,7 @@ namespace Engine
         std::vector<unsigned int> TextureIDs;
         DepthSortingMode SortingMode = DepthSortingMode::Opaque;
         BlendingMode BlendMode = BlendingMode::None;
+        CullingMode CullMode = CullingMode::Front;
         int SortOrder = 0;
     };
 

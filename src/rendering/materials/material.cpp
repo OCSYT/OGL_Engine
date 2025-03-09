@@ -34,26 +34,41 @@ Engine::Shader *Engine::Material::GetShader()
 void Engine::Material::Bind() const
 {
     Shader.Bind();
+    glEnable(GL_DEPTH_TEST); 
 
     // Configure blending mode
+    if(CullMode == CullingMode::Front){
+        glCullFace(GL_FRONT);
+    }
+    else if(CullMode == CullingMode::Back){
+        glCullFace(GL_BACK);
+    }
+    else{
+        glCullFace(GL_FRONT_AND_BACK);
+    }
+
     if (BlendMode == BlendingMode::AlphaBlend)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
     }
     else if (BlendMode == BlendingMode::Additive)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDepthMask(GL_FALSE);
     }
     else if (BlendMode == BlendingMode::Multiply)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_DST_COLOR, GL_ZERO);
+        glDepthMask(GL_FALSE);
     }
     else
     {
         glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
     }
 
     // Bind textures
@@ -232,6 +247,18 @@ Engine::Material::BlendingMode Engine::Material::GetBlendingMode() const
 {
     return BlendMode;
 }
+
+
+void Engine::Material::SetCullingMode(CullingMode Mode)
+{
+    CullMode = Mode;
+}
+
+Engine::Material::CullingMode Engine::Material::GetCullingMode() const
+{
+    return CullMode;
+}
+
 
 void Engine::Material::SetSortOrder(int Order)
 {
