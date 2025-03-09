@@ -14,7 +14,11 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path)
     std::string FullPathStr = FullPath.string();
     const char *FullPathString = FullPathStr.c_str();
     Assimp::Importer Importer;
-    const aiScene *Scene = Importer.ReadFile(FullPathString, aiProcess_Triangulate);
+    const aiScene *Scene = Importer.ReadFile(FullPathString,  
+        aiProcess_CalcTangentSpace       |
+        aiProcess_Triangulate            |
+        aiProcess_JoinIdenticalVertices  |
+        aiProcess_SortByPType);
 
     Mesh ModelMesh;
 
