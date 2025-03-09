@@ -2,7 +2,7 @@
 
 Engine::Camera::Camera(CameraMode Mode, unsigned int* WindowWidth, unsigned int* WindowHeight)
     : Mode(Mode), WindowWidth(WindowWidth), WindowHeight(WindowHeight),
-      FOV(90.0f), NearPlane(0.1f), FarPlane(100.0f), OrthoSize(10.0f),
+      FOV(90.0f), NearPlane(0.1f), FarPlane(1000.0f), OrthoSize(10.0f),
       Position(glm::vec3(0.0f)), Rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)) {}
 
 void Engine::Camera::SetPerspective(float FOV, float NearPlane, float FarPlane) {

@@ -5,6 +5,8 @@ in vec3 VertexColor;
 in vec3 FragNormal;
 in vec3 FragPos;
 in vec4 FragPosClip;
+in vec3 Tangent;
+in vec3 Bitangent;
 
 out vec4 OutColor;
 layout(location = 1) out vec3 OutFragNormal;
@@ -16,14 +18,16 @@ layout(location = 6) out vec3 OutEmission;
 
 // Uniforms
 uniform sampler2D Texture;
-uniform sampler2D EmissionTexture;
+uniform sampler2D NormalTexture;
 uniform sampler2D MetallicTexture;
 uniform sampler2D RoughnessTexture;
+uniform sampler2D EmissionTexture;
 uniform bool UseVertexColor;
 uniform bool UseTexture;
 uniform bool UseEmission;
 uniform bool UseMetallic;
 uniform bool UseRoughness;
+uniform bool UseNormalMap;
 uniform vec4 Color;
 
 // Ordered Dither Matrix (4x4 Bayer matrix)
@@ -71,7 +75,21 @@ void main() {
     OutMetallic = metallic;
     OutRoughness = roughness;
 
-    OutFragNormal = normalize(FragNormal);
+    // Normal Mapping
+    vec3 normal = normalize(FragNormal);
+    if (UseNormalMap) {
+        vec3 tangentNormal = texture(NormalTexture, TexCoord).rgb * 2.0 - 1.0;
+
+        // Construct TBN matrix
+        vec3 T = normalize(Tangent);
+        vec3 B = normalize(Bitangent);
+        vec3 N = normalize(FragNormal);
+        mat3 TBN = mat3(T, B, N);
+
+        normal = normalize(TBN * tangentNormal);
+    }
+
+    OutFragNormal = normal;
     OutFragPosition = FragPos;
 
     if (UseEmission) {

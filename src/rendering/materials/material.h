@@ -18,8 +18,8 @@ namespace Engine
     public:
         enum class DepthSortingMode
         {
-            Opaque,
-            Transparent,
+            ReadWrite,
+            Write,
             Read,
             None
         };
@@ -83,7 +83,7 @@ namespace Engine
     private:
         Shader Shader;
         std::vector<unsigned int> TextureIDs;
-        DepthSortingMode SortingMode = DepthSortingMode::Opaque;
+        DepthSortingMode SortingMode = DepthSortingMode::ReadWrite;
         BlendingMode BlendMode = BlendingMode::None;
         CullingMode CullMode = CullingMode::Front;
         int SortOrder = 0;

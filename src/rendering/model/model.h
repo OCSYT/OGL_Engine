@@ -30,6 +30,24 @@ namespace Engine
         };
 
 
+        struct LightData {
+            enum class LightType { AMBIENT, DIRECTIONAL, POINT, SPOT };
+            
+            LightType Type;
+            glm::vec3 Position;
+            glm::vec3 Direction;
+            glm::vec3 Color;
+            float Intensity;
+            
+            // Spot and Point light parameters
+            float Constant;
+            float Linear;
+            float Quadratic;
+            float InnerCone;
+            float OuterCone;
+        };
+        
+
         struct MaterialData {
             glm::vec4 DiffuseColor;      // Diffuse color
             glm::vec4 AmbientColor;      // Ambient color
@@ -57,7 +75,11 @@ namespace Engine
         {
             std::vector<MeshData> Meshes;
             std::vector<MaterialData> MaterialData;
+            std::vector<LightData> Lights;
+        
+            ~Mesh();
         };
+        
 
         struct ModelInstance
         {

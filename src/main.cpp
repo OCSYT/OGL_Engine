@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <sstream>
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
 
 #include "util/util.h"
 #include "rendering/render_target/render_target.h"
@@ -19,21 +19,49 @@
 unsigned int WindowWidth = 800;
 unsigned int WindowHeight = 600;
 
+struct PointLight
+{
+    glm::vec3 Position;
+    glm::vec3 Color;
+    float Intensity;
+};
+std::vector<PointLight> pointLights = {
+};
+
+struct DirectionalLight
+{
+    glm::vec3 Direction;
+    glm::vec3 Color;
+    float Intensity;
+};
+std::vector<DirectionalLight> directionalLights = {
+    {glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 2.0f}
+};
+
+struct Spotlight
+{
+    glm::vec3 Position;
+    glm::vec3 Direction;
+    glm::vec3 Color;
+    float Intensity;
+    float CutOff;
+    float OuterCutOff;
+};
+std::vector<Spotlight> spotlights = {
+
+};
+
+
 Engine::Camera MainCamera(Engine::Camera::CameraMode::Perspective, &WindowWidth, &WindowHeight);
 
 Engine::RenderTarget *SceneRenderTarget;
-
 Engine::Sprite *RenderTargetSprite;
 Engine::Material *RenderTargetMaterial;
 
 Engine::Material *SpriteMaterial;
 Engine::Sprite *TestSprite;
 
-Engine::Model::ModelInstance *MarkiplierModel;
-Engine::Material *Skin;
-Engine::Material *Eye;
-Engine::Material *Glasses;
-Engine::Material *Hair;
+Engine::Model::ModelInstance *Model;
 
 Engine::Material *FontMaterial;
 Engine::Text *UIText;
@@ -64,6 +92,8 @@ void InitText()
 {
     FontMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/font/arial.png"});
     FontMaterial->SetUniform("Color", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+    FontMaterial->SetDepthSortingMode(Engine::Material::DepthSortingMode::None);
+    FontMaterial->SetBlendingMode(Engine::Material::BlendingMode::AlphaBlend);
     UIText = new Engine::Text(FontMaterial, glm::vec2(0, 0), 32.0f, &WindowWidth, &WindowHeight);
 }
 
@@ -75,11 +105,51 @@ void RenderText(const std::string &text)
     UIText->Render(text.c_str());
 }
 
-void InitMarkiplier()
+void InitModel()
 {
-    Engine::Model::Mesh Mesh = Engine::Model::LoadMesh("assets/models/Markiplier.obj");
+    Engine::Model::Mesh Mesh = Engine::Model::LoadMesh("assets/models/sponza.obj");
 
     std::vector<Engine::Material*> AssignedMaterials(Mesh.MaterialData.size(), nullptr);
+
+    for (unsigned int i = 0; i < Mesh.Lights.size(); i++) {
+        const Engine::Model::LightData& light = Mesh.Lights[i];
+        
+        switch (light.Type) {
+            case Engine::Model::LightData::LightType::POINT:
+                pointLights.push_back(PointLight{
+                    light.Position,
+                    light.Color,
+                    light.Intensity
+                });
+                break;
+            
+            case Engine::Model::LightData::LightType::DIRECTIONAL:
+                directionalLights.push_back(DirectionalLight{
+                    light.Direction,
+                    light.Color,
+                    light.Intensity
+                });
+                break;
+            
+            case Engine::Model::LightData::LightType::SPOT:
+                spotlights.push_back(Spotlight{
+                    light.Position,
+                    light.Direction,
+                    light.Color,
+                    light.Intensity,
+                    light.InnerCone,
+                    light.OuterCone
+                });
+                break;
+            
+            case Engine::Model::LightData::LightType::AMBIENT:
+                break;
+            
+            default:
+                break;
+        }
+    }
+    
 
     for (unsigned int i = 0; i < Mesh.MaterialData.size(); i++)
     {
@@ -93,8 +163,12 @@ void InitMarkiplier()
         NewMaterial->SetUniform("Color", Data.DiffuseColor);
 
         if (!Data.DiffuseTextures.empty()) {
-            NewMaterial->LoadTextures({"assets/models/" + Data.DiffuseTextures[0]});
+            NewMaterial->LoadTexture(0, "assets/models/" + Data.DiffuseTextures[0]);
             NewMaterial->SetUniform("UseTexture", true);
+        }
+        if (!Data.NormalTextures.empty()) {
+            NewMaterial->LoadTexture(1, "assets/models/" + Data.NormalTextures[0]);
+            NewMaterial->SetUniform("UseNormalMap", true);
         }
 
         AssignedMaterials[i] = NewMaterial;
@@ -108,20 +182,21 @@ void InitMarkiplier()
         MeshMaterials.push_back(AssignedMaterials[MaterialIndex]);
     }
 
-    MarkiplierModel = new Engine::Model::ModelInstance(
+    Model = new Engine::Model::ModelInstance(
         Mesh,
         MeshMaterials,
         glm::mat4(1.0f)
     );
 }
 
-void RenderMarkiplier()
+void RenderModel()
 {
-    glm::mat4 ModelMatrix = glm::rotate(glm::mat4(1.0f), static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-    ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, -0.25f, 0.0f));
-    MarkiplierModel->Transform = ModelMatrix;
+    glm::mat4 ModelMatrix = glm::mat4(1.0f);
+    ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, -50.0f, 0.0f));
+    ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.25f, 0.25f,0.25f));
+    Model->Transform = ModelMatrix;
 
-    Engine::Model::DrawModelInstances({*MarkiplierModel}, &MainCamera);
+    Engine::Model::DrawModelInstances({*Model}, &MainCamera);
 }
 
 void CalculateFPS()
@@ -136,47 +211,11 @@ void CalculateFPS()
     }
 }
 
-struct PointLight
-{
-    glm::vec3 Position;
-    glm::vec3 Color;
-    float Intensity;
-};
-std::vector<PointLight> pointLights = {
-    // Red light
-    {glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 50.0f},
-
-    // Blue light
-    {glm::vec3(3.0f, 2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), 50.0f},
-
-    // Green light
-    {glm::vec3(6.0f, 2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 50.0f}};
-
-struct DirectionalLight
-{
-    glm::vec3 Direction;
-    glm::vec3 Color;
-    float Intensity;
-};
-std::vector<DirectionalLight> directionalLights = {
-
-};
-
-struct Spotlight
-{
-    glm::vec3 Position;
-    glm::vec3 Direction;
-    glm::vec3 Color;
-    float Intensity;
-    float CutOff;
-    float OuterCutOff;
-};
-std::vector<Spotlight> spotlights = {
-
-};
-
 void Render(GLFWwindow *Window)
 {
+    glm::mat4 RotationMatrix = glm::rotate(glm::mat4(1.0f), (glm::mediump_float32)glm::radians(glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    MainCamera.SetRotation(RotationMatrix);
+
     glfwPollEvents();
 
     SceneRenderTarget->Resize(glm::vec2(WindowWidth, WindowHeight));
@@ -185,7 +224,7 @@ void Render(GLFWwindow *Window)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    RenderMarkiplier();
+    RenderModel();
 
     SceneRenderTarget->Unbind();
 
@@ -269,7 +308,7 @@ int main()
         return -1;
     }
 
-    GLFWwindow *Window = glfwCreateWindow(WindowWidth, WindowHeight, "MARKIPLIER!!!", nullptr, nullptr);
+    GLFWwindow *Window = glfwCreateWindow(WindowWidth, WindowHeight, "SPONZAAA!!!", nullptr, nullptr);
     if (!Window)
     {
         std::cerr << "Failed to create GLFW window!" << std::endl;
@@ -290,7 +329,7 @@ int main()
 
     InitRenderTarget();
     InitText();
-    InitMarkiplier();
+    InitModel();
     MainCamera.SetPosition(glm::vec3(0, 0, 1));
 
     while (!glfwWindowShouldClose(Window))
@@ -298,12 +337,12 @@ int main()
         Render(Window);
     }
 
-    Engine::Model::UnloadModelInstance(*MarkiplierModel);
+    for(unsigned int i = 0; i < Model->Materials.size(); i++){
+        delete Model->Materials[i];
+    }
 
-    delete Skin;
-    delete Eye;
-    delete Glasses;
-    delete Hair;
+    Engine::Model::UnloadModelInstance(*Model);
+
     delete FontMaterial;
     delete RenderTargetMaterial;
 

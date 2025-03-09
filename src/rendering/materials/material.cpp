@@ -36,39 +36,53 @@ void Engine::Material::Bind() const
     Shader.Bind();
     glEnable(GL_DEPTH_TEST); 
 
-    // Configure blending mode
-    if(CullMode == CullingMode::Front){
-        glCullFace(GL_FRONT);
-    }
-    else if(CullMode == CullingMode::Back){
-        glCullFace(GL_BACK);
-    }
-    else{
-        glCullFace(GL_FRONT_AND_BACK);
+    // Configure depth sorting
+    switch (SortingMode)
+    {
+        case DepthSortingMode::ReadWrite:
+            glDepthMask(GL_TRUE);
+            glDepthFunc(GL_LESS);
+            break;
+        case DepthSortingMode::Write:
+            glDepthMask(GL_TRUE);
+            glDepthFunc(GL_ALWAYS);
+            break;
+        case DepthSortingMode::Read:
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_LESS);
+            break;
+        case DepthSortingMode::None:
+            glDisable(GL_DEPTH_TEST);
+            break;
     }
 
+    // Configure culling mode
+    if (CullMode == CullingMode::Front)
+        glCullFace(GL_FRONT);
+    else if (CullMode == CullingMode::Back)
+        glCullFace(GL_BACK);
+    else
+        glCullFace(GL_FRONT_AND_BACK);
+
+    // Configure blending mode
     if (BlendMode == BlendingMode::AlphaBlend)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDepthMask(GL_FALSE);
     }
     else if (BlendMode == BlendingMode::Additive)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glDepthMask(GL_FALSE);
     }
     else if (BlendMode == BlendingMode::Multiply)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_DST_COLOR, GL_ZERO);
-        glDepthMask(GL_FALSE);
     }
     else
     {
         glDisable(GL_BLEND);
-        glDepthMask(GL_TRUE);
     }
 
     // Bind textures

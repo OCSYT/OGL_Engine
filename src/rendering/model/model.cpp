@@ -1,92 +1,156 @@
 #include "model.h"
 
-Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
+
+Engine::Model::Mesh::~Mesh()
+{
+    Meshes.clear();
+    MaterialData.clear();
+    Lights.clear();
+}
+
+Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path)
+{
     std::filesystem::path FullPath = std::filesystem::path(Util::GetExecutablePath()) / Path;
     std::string FullPathStr = FullPath.string();
-    const char* FullPathString = FullPathStr.c_str();
+    const char *FullPathString = FullPathStr.c_str();
     Assimp::Importer Importer;
-    const aiScene* Scene = Importer.ReadFile(FullPathString, aiProcess_Triangulate);
+    const aiScene *Scene = Importer.ReadFile(FullPathString, aiProcess_Triangulate);
 
     Mesh ModelMesh;
 
-    if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode) {
+    if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
+    {
+        std::string ErrorMessage = Importer.GetErrorString();
+        std::cout << "Assimp Error: " << ErrorMessage << "\n";
         return ModelMesh;
+    }
+
+    // Process Lights in the scene
+    for (unsigned int i = 0; i < Scene->mNumLights; i++)
+    {
+        aiLight *AssimpLight = Scene->mLights[i];
+        LightData Light;
+
+        if (AssimpLight->mType == aiLightSource_DIRECTIONAL)
+        {
+            Light.Type = LightData::LightType::DIRECTIONAL;
+            Light.Direction = glm::vec3(AssimpLight->mDirection.x, AssimpLight->mDirection.y, AssimpLight->mDirection.z);
+        }
+        else if (AssimpLight->mType == aiLightSource_POINT)
+        {
+            Light.Type = LightData::LightType::POINT;
+            Light.Position = glm::vec3(AssimpLight->mPosition.x, AssimpLight->mPosition.y, AssimpLight->mPosition.z);
+            Light.Constant = AssimpLight->mAttenuationConstant;
+            Light.Linear = AssimpLight->mAttenuationLinear;
+            Light.Quadratic = AssimpLight->mAttenuationQuadratic;
+        }
+        else if (AssimpLight->mType == aiLightSource_SPOT)
+        {
+            Light.Type = LightData::LightType::SPOT;
+            Light.Position = glm::vec3(AssimpLight->mPosition.x, AssimpLight->mPosition.y, AssimpLight->mPosition.z);
+            Light.Direction = glm::vec3(AssimpLight->mDirection.x, AssimpLight->mDirection.y, AssimpLight->mDirection.z);
+            Light.InnerCone = AssimpLight->mAngleInnerCone;
+            Light.OuterCone = AssimpLight->mAngleOuterCone;
+        }
+        else
+        {
+            Light.Type = LightData::LightType::AMBIENT;
+        }
+
+        // Extract light color
+        Light.Color = glm::vec3(AssimpLight->mColorDiffuse.r, AssimpLight->mColorDiffuse.g, AssimpLight->mColorDiffuse.b);
+        Light.Intensity = glm::length(Light.Color); // Compute intensity based on color
+
+        // Store the extracted light in the mesh
+        ModelMesh.Lights.push_back(Light);
     }
 
     // Resize the MaterialData vector to match the number of materials in the scene
     ModelMesh.MaterialData.resize(Scene->mNumMaterials);
 
     // Iterate through all materials in the scene
-    for (unsigned int i = 0; i < Scene->mNumMaterials; i++) {
-        aiMaterial* AssimpMaterial = Scene->mMaterials[i];
+    for (unsigned int i = 0; i < Scene->mNumMaterials; i++)
+    {
+        aiMaterial *AssimpMaterial = Scene->mMaterials[i];
         MaterialData material;
 
         // Extract Diffuse Color
         aiColor4D DiffuseColor;
-        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, DiffuseColor)) {
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, DiffuseColor))
+        {
             material.DiffuseColor = glm::vec4(DiffuseColor.r, DiffuseColor.g, DiffuseColor.b, DiffuseColor.a);
         }
 
         // Extract Ambient Color
         aiColor4D AmbientColor;
-        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_AMBIENT, AmbientColor)) {
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_AMBIENT, AmbientColor))
+        {
             material.AmbientColor = glm::vec4(AmbientColor.r, AmbientColor.g, AmbientColor.b, AmbientColor.a);
         }
 
         // Extract Specular Color
         aiColor4D SpecularColor;
-        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_SPECULAR, SpecularColor)) {
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_SPECULAR, SpecularColor))
+        {
             material.SpecularColor = glm::vec4(SpecularColor.r, SpecularColor.g, SpecularColor.b, SpecularColor.a);
         }
 
         // Extract Emissive Color
         aiColor4D EmissiveColor;
-        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_EMISSIVE, EmissiveColor)) {
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_EMISSIVE, EmissiveColor))
+        {
             material.EmissiveColor = glm::vec4(EmissiveColor.r, EmissiveColor.g, EmissiveColor.b, EmissiveColor.a);
         }
 
         // Extract Shininess (specular exponent)
         float Shininess;
-        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_SHININESS, Shininess)) {
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_SHININESS, Shininess))
+        {
             material.Shininess = Shininess;
         }
 
         // Extract Transparency (opacity)
         float Transparency;
-        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_OPACITY, Transparency)) {
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_OPACITY, Transparency))
+        {
             material.Transparency = Transparency;
         }
 
         // Extract Diffuse Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_DIFFUSE); j++) {
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_DIFFUSE); j++)
+        {
             aiString texturePath;
             AssimpMaterial->GetTexture(aiTextureType_DIFFUSE, j, &texturePath);
             material.DiffuseTextures.push_back(texturePath.C_Str());
         }
 
         // Extract Specular Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_SPECULAR); j++) {
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_SPECULAR); j++)
+        {
             aiString texturePath;
             AssimpMaterial->GetTexture(aiTextureType_SPECULAR, j, &texturePath);
             material.SpecularTextures.push_back(texturePath.C_Str());
         }
 
         // Extract Normal Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_NORMALS); j++) {
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_NORMALS); j++)
+        {
             aiString texturePath;
             AssimpMaterial->GetTexture(aiTextureType_NORMALS, j, &texturePath);
             material.NormalTextures.push_back(texturePath.C_Str());
         }
 
         // Extract Height Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_HEIGHT); j++) {
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_HEIGHT); j++)
+        {
             aiString texturePath;
             AssimpMaterial->GetTexture(aiTextureType_HEIGHT, j, &texturePath);
             material.HeightTextures.push_back(texturePath.C_Str());
         }
 
         // Extract Ambient Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_AMBIENT); j++) {
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_AMBIENT); j++)
+        {
             aiString texturePath;
             AssimpMaterial->GetTexture(aiTextureType_AMBIENT, j, &texturePath);
             material.AmbientTextures.push_back(texturePath.C_Str());
@@ -97,30 +161,32 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
     }
 
     // Process Meshes in the scene
-    for (unsigned int MeshIndex = 0; MeshIndex < Scene->mNumMeshes; MeshIndex++) {
-        aiMesh* AssimpMesh = Scene->mMeshes[MeshIndex];
+    for (unsigned int MeshIndex = 0; MeshIndex < Scene->mNumMeshes; MeshIndex++)
+    {
+        aiMesh *AssimpMesh = Scene->mMeshes[MeshIndex];
         MeshData Mesh;
         std::vector<float> Vertices;
         std::vector<unsigned int> Indices;
 
         // Extracting vertex data
-        for (unsigned int i = 0; i < AssimpMesh->mNumVertices; i++) {
+        for (unsigned int i = 0; i < AssimpMesh->mNumVertices; i++)
+        {
             aiVector3D Pos = AssimpMesh->mVertices[i];
             aiVector3D Normal = AssimpMesh->HasNormals() ? AssimpMesh->mNormals[i] : aiVector3D(0, 0, 0);
             aiVector3D TexCoords = AssimpMesh->HasTextureCoords(0) ? AssimpMesh->mTextureCoords[0][i] : aiVector3D(0, 0, 0);
 
-            Vertices.insert(Vertices.end(), {
-                Pos.x, Pos.y, Pos.z,
-                TexCoords.x, TexCoords.y,
-                Normal.x, Normal.y, Normal.z,
-                1.0f, 1.0f, 1.0f
-            });
+            Vertices.insert(Vertices.end(), {Pos.x, Pos.y, Pos.z,
+                                             TexCoords.x, TexCoords.y,
+                                             Normal.x, Normal.y, Normal.z,
+                                             1.0f, 1.0f, 1.0f});
         }
 
         // Extracting face data
-        for (unsigned int i = 0; i < AssimpMesh->mNumFaces; i++) {
+        for (unsigned int i = 0; i < AssimpMesh->mNumFaces; i++)
+        {
             aiFace Face = AssimpMesh->mFaces[i];
-            for (unsigned int j = 0; j < Face.mNumIndices; j++) {
+            for (unsigned int j = 0; j < Face.mNumIndices; j++)
+            {
                 Indices.push_back(Face.mIndices[j]);
             }
         }
@@ -135,13 +201,13 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Mesh.EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(unsigned int), Indices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(5 * sizeof(float)));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)(5 * sizeof(float)));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void *)(8 * sizeof(float)));
         glEnableVertexAttribArray(3);
 
         glBindVertexArray(0);
@@ -153,8 +219,10 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
     return ModelMesh;
 }
 
-void Engine::Model::DrawModel(const MeshData& Mesh, Material* MaterialPtr, const glm::mat4& ModelMatrix, Camera* MainCamera) {
-    if (!MaterialPtr || !MainCamera) {
+void Engine::Model::DrawModel(const MeshData &Mesh, Material *MaterialPtr, const glm::mat4 &ModelMatrix, Camera *MainCamera)
+{
+    if (!MaterialPtr || !MainCamera)
+    {
         return;
     }
 
@@ -168,45 +236,54 @@ void Engine::Model::DrawModel(const MeshData& Mesh, Material* MaterialPtr, const
     glBindVertexArray(0);
 }
 
-void Engine::Model::DrawMesh(const Mesh& ModelMesh, const std::vector<Material*>& Materials, const glm::mat4& ModelMatrix, Camera* MainCamera) {
-    if (Materials.empty() || !MainCamera) {
+void Engine::Model::DrawMesh(const Mesh &ModelMesh, const std::vector<Material *> &Materials, const glm::mat4 &ModelMatrix, Camera *MainCamera)
+{
+    if (Materials.empty() || !MainCamera)
+    {
         return;
     }
 
     std::vector<std::pair<int, size_t>> SortedMeshes;
 
-    for (size_t i = 0; i < ModelMesh.Meshes.size(); ++i) {
-        Material* MaterialPtr = (i < Materials.size()) ? Materials[i] : Materials.back();
+    for (size_t i = 0; i < ModelMesh.Meshes.size(); ++i)
+    {
+        Material *MaterialPtr = (i < Materials.size()) ? Materials[i] : Materials.back();
 
         int SortIndex = MaterialPtr->GetSortOrder();
-        
+
         SortedMeshes.emplace_back(SortIndex, i);
     }
 
-    std::sort(SortedMeshes.begin(), SortedMeshes.end(), 
-              [](const std::pair<int, size_t>& A, const std::pair<int, size_t>& B) {
+    std::sort(SortedMeshes.begin(), SortedMeshes.end(),
+              [](const std::pair<int, size_t> &A, const std::pair<int, size_t> &B)
+              {
                   return A.first < B.first;
               });
 
-    for (const auto& [_, i] : SortedMeshes) {
-        Material* MaterialPtr = (i < Materials.size()) ? Materials[i] : Materials.back();
+    for (const auto &[_, i] : SortedMeshes)
+    {
+        Material *MaterialPtr = (i < Materials.size()) ? Materials[i] : Materials.back();
         DrawModel(ModelMesh.Meshes[i], MaterialPtr, ModelMatrix, MainCamera);
     }
 }
 
-void Engine::Model::DrawModelInstances(const std::vector<ModelInstance>& ModelInstances, Camera* MainCamera) {
-    if (!MainCamera) {
+void Engine::Model::DrawModelInstances(const std::vector<ModelInstance> &ModelInstances, Camera *MainCamera)
+{
+    if (!MainCamera)
+    {
         return;
     }
 
-    std::vector<std::tuple<int, const MeshData*, Material*, glm::mat4>> SortedMeshes;
+    std::vector<std::tuple<int, const MeshData *, Material *, glm::mat4>> SortedMeshes;
 
-    for (const auto& Instance : ModelInstances) {
-        const Mesh& ModelMesh = Instance.ModelMesh;
-        const glm::mat4& ModelMatrix = Instance.Transform;
+    for (const auto &Instance : ModelInstances)
+    {
+        const Mesh &ModelMesh = Instance.ModelMesh;
+        const glm::mat4 &ModelMatrix = Instance.Transform;
 
-        for (size_t i = 0; i < ModelMesh.Meshes.size(); ++i) {
-            Material* MaterialPtr = (i < Instance.Materials.size()) ? Instance.Materials[i] : Instance.Materials.back();
+        for (size_t i = 0; i < ModelMesh.Meshes.size(); ++i)
+        {
+            Material *MaterialPtr = (i < Instance.Materials.size()) ? Instance.Materials[i] : Instance.Materials.back();
 
             int SortIndex = MaterialPtr->GetSortOrder();
 
@@ -214,16 +291,18 @@ void Engine::Model::DrawModelInstances(const std::vector<ModelInstance>& ModelIn
         }
     }
 
-    std::sort(SortedMeshes.begin(), SortedMeshes.end(), 
-              [MainCamera](const auto& A, const auto& B) {
+    std::sort(SortedMeshes.begin(), SortedMeshes.end(),
+              [MainCamera](const auto &A, const auto &B)
+              {
                   int SortIndexA = std::get<0>(A);
                   int SortIndexB = std::get<0>(B);
-                  
+
                   // First, compare the SortIndex
-                  if (SortIndexA != SortIndexB) {
+                  if (SortIndexA != SortIndexB)
+                  {
                       return SortIndexA < SortIndexB;
                   }
-                  
+
                   // If SortIndex is the same, compare by distance to the camera
                   glm::vec3 ModelPosA = glm::vec3(std::get<3>(A)[3]);
                   glm::vec3 ModelPosB = glm::vec3(std::get<3>(B)[3]);
@@ -233,19 +312,23 @@ void Engine::Model::DrawModelInstances(const std::vector<ModelInstance>& ModelIn
                   return DistanceA < DistanceB;
               });
 
-    for (const auto& [_, Mesh, MaterialPtr, ModelMatrix] : SortedMeshes) {
+    for (const auto &[_, Mesh, MaterialPtr, ModelMatrix] : SortedMeshes)
+    {
         DrawModel(*Mesh, MaterialPtr, ModelMatrix, MainCamera);
     }
 }
 
-void Engine::Model::UnloadModelInstance(ModelInstance& instance) {
+void Engine::Model::UnloadModelInstance(ModelInstance &instance)
+{
     UnloadMesh(instance.ModelMesh);
     instance.Materials.clear();
     delete &instance;
 }
 
-void Engine::Model::UnloadMesh(Mesh& ModelMesh) {
-    for (MeshData& Mesh : ModelMesh.Meshes) {
+void Engine::Model::UnloadMesh(Mesh &ModelMesh)
+{
+    for (MeshData &Mesh : ModelMesh.Meshes)
+    {
         glDeleteVertexArrays(1, &Mesh.VAO);
         glDeleteBuffers(1, &Mesh.VBO);
         glDeleteBuffers(1, &Mesh.EBO);
