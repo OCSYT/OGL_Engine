@@ -27,16 +27,16 @@ struct SpotLight {
     vec3 Direction;
     vec3 Color;
     float Intensity;
-    float Cutoff; // Spotlight cutoff angle
-    float OuterCutoff; // Outer spotlight cutoff angle
+    float Cutoff;
+    float OuterCutoff;
 };
 
 uniform int NumPointLights;
-uniform PointLight PointLights[256];
+uniform PointLight PointLights[64];
 uniform int NumDirectionalLights;
-uniform DirectionalLight DirectionalLights[256];
+uniform DirectionalLight DirectionalLights[64];
 uniform int NumSpotLights;
-uniform SpotLight SpotLights[256];
+uniform SpotLight SpotLights[64];
 uniform vec3 ViewPosition;
 
 const float PI = 3.14159265359;

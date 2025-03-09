@@ -31,7 +31,7 @@ namespace Engine
 
 
         struct LightData {
-            enum class LightType { AMBIENT, DIRECTIONAL, POINT, SPOT };
+            enum class LightType { Ambient, Directional, Point, Spot };
             
             LightType Type;
             glm::vec3 Position;

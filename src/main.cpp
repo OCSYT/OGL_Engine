@@ -1,12 +1,12 @@
 #define STB_IMAGE_IMPLEMENTATION
-
+#define NOMINMAX
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <sstream>
-#include "glm/glm.hpp"
+#include <algorithm>
 
 #include "util/util.h"
 #include "rendering/render_target/render_target.h"
@@ -16,184 +16,95 @@
 #include "rendering/model/model.h"
 #include "rendering/text/text.h"
 
-unsigned int WindowWidth = 800;
-unsigned int WindowHeight = 600;
+unsigned int WindowWidth = 800, WindowHeight = 600;
 
-struct PointLight
+struct Light
 {
-    glm::vec3 Position;
-    glm::vec3 Color;
-    float Intensity;
+    glm::vec3 Position, Direction, Color;
+    float Intensity, CutOff, OuterCutOff;
 };
-std::vector<PointLight> pointLights = {
-};
-
-struct DirectionalLight
-{
-    glm::vec3 Direction;
-    glm::vec3 Color;
-    float Intensity;
-};
-std::vector<DirectionalLight> directionalLights = {
-    {glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 2.0f}
-};
-
-struct Spotlight
-{
-    glm::vec3 Position;
-    glm::vec3 Direction;
-    glm::vec3 Color;
-    float Intensity;
-    float CutOff;
-    float OuterCutOff;
-};
-std::vector<Spotlight> spotlights = {
-
-};
-
+std::vector<Light> PointLights, DirectionalLights, Spotlights;
 
 Engine::Camera MainCamera(Engine::Camera::CameraMode::Perspective, &WindowWidth, &WindowHeight);
-
 Engine::RenderTarget *SceneRenderTarget;
 Engine::Sprite *RenderTargetSprite;
-Engine::Material *RenderTargetMaterial;
-
-Engine::Material *SpriteMaterial;
+Engine::Material *RenderTargetMaterial, *SpriteMaterial, *FontMaterial;
 Engine::Sprite *TestSprite;
-
 Engine::Model::ModelInstance *Model;
-
-Engine::Material *FontMaterial;
 Engine::Text *UIText;
 
-float LastTime = 0.0f;  // Store the time of the last frame
-float DeltaTime = 0.0f; // Time between frames
-float FPS = 0.0f;       // Frames per second
+float LastTime = 0.0f, DeltaTime = 0.0f, FPS = 0.0f;
 
 void InitRenderTarget()
 {
-    std::vector<Engine::RenderTarget::Attachment> Attachments = {
-        {GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE}, // Albedo
-        {GL_RGB16F, GL_RGB, GL_FLOAT},           // Normal
-        {GL_RGB16F, GL_RGB, GL_FLOAT},           // Position
-        {GL_R32F, GL_RED, GL_FLOAT},             // Depth
-        {GL_R16F, GL_RED, GL_FLOAT},             // Metallic
-        {GL_R16F, GL_RED, GL_FLOAT},             // Roughness
-        {GL_RGB16F, GL_RGB, GL_FLOAT}            // Emission
-    };
-    SceneRenderTarget = new Engine::RenderTarget(glm::vec2(WindowWidth, WindowHeight), Attachments);
-    RenderTargetMaterial = new Engine::Material("assets/shaders/deferred/vert.glsl",
-                                                "assets/shaders/deferred/lighting.glsl",
-                                                {});
+    SceneRenderTarget = new Engine::RenderTarget(glm::vec2(WindowWidth, WindowHeight), {{GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE}, {GL_RGB16F, GL_RGB, GL_FLOAT}, {GL_RGB16F, GL_RGB, GL_FLOAT}, {GL_R32F, GL_RED, GL_FLOAT}, {GL_R16F, GL_RED, GL_FLOAT}, {GL_R16F, GL_RED, GL_FLOAT}, {GL_RGB16F, GL_RGB, GL_FLOAT}});
+    RenderTargetMaterial = new Engine::Material("Assets/Shaders/Deferred/Vert.glsl", "Assets/Shaders/Deferred/Lighting.glsl", {});
     RenderTargetSprite = new Engine::Sprite(RenderTargetMaterial, glm::vec2(0, 0), glm::vec2(0, 0), &WindowWidth, &WindowHeight);
 }
 
 void InitText()
 {
-    FontMaterial = new Engine::Material("assets/shaders/main/vert.glsl", "assets/shaders/main/frag.glsl", {"assets/textures/font/arial.png"});
+    FontMaterial = new Engine::Material("Assets/Shaders/Main/Vert.glsl", "Assets/Shaders/Main/Frag.glsl", {"Assets/Textures/Font/Arial.png"});
     FontMaterial->SetUniform("Color", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
     FontMaterial->SetDepthSortingMode(Engine::Material::DepthSortingMode::None);
     FontMaterial->SetBlendingMode(Engine::Material::BlendingMode::AlphaBlend);
     UIText = new Engine::Text(FontMaterial, glm::vec2(0, 0), 32.0f, &WindowWidth, &WindowHeight);
 }
 
-void RenderText(const std::string &text)
+void RenderText(const std::string &Text)
 {
-    float ScaleFactor = (WindowWidth < WindowHeight ? WindowWidth : WindowHeight) / 10.0f;
+    float ScaleFactor = std::min(WindowWidth, WindowHeight) / 10.0f;
     UIText->SetPosition(glm::vec2(ScaleFactor / 2, ScaleFactor / 2));
     UIText->SetScale(ScaleFactor / 3);
-    UIText->Render(text.c_str());
+    UIText->Render(Text.c_str());
 }
 
 void InitModel()
 {
-    Engine::Model::Mesh Mesh = Engine::Model::LoadMesh("assets/models/sponza.obj");
-
-    std::vector<Engine::Material*> AssignedMaterials(Mesh.MaterialData.size(), nullptr);
-
-    for (unsigned int i = 0; i < Mesh.Lights.size(); i++) {
-        const Engine::Model::LightData& light = Mesh.Lights[i];
-        
-        switch (light.Type) {
-            case Engine::Model::LightData::LightType::POINT:
-                pointLights.push_back(PointLight{
-                    light.Position,
-                    light.Color,
-                    light.Intensity
-                });
-                break;
-            
-            case Engine::Model::LightData::LightType::DIRECTIONAL:
-                directionalLights.push_back(DirectionalLight{
-                    light.Direction,
-                    light.Color,
-                    light.Intensity
-                });
-                break;
-            
-            case Engine::Model::LightData::LightType::SPOT:
-                spotlights.push_back(Spotlight{
-                    light.Position,
-                    light.Direction,
-                    light.Color,
-                    light.Intensity,
-                    light.InnerCone,
-                    light.OuterCone
-                });
-                break;
-            
-            case Engine::Model::LightData::LightType::AMBIENT:
-                break;
-            
-            default:
-                break;
-        }
-    }
+    DirectionalLights.push_back({{}, glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 2, 0, 0});
     
+    Engine::Model::Mesh Mesh = Engine::Model::LoadMesh("Assets/Models/Sponza.obj");
+    std::vector<Engine::Material *> AssignedMaterials(Mesh.MaterialData.size(), nullptr);
 
-    for (unsigned int i = 0; i < Mesh.MaterialData.size(); i++)
+    for (const auto &Light : Mesh.Lights)
     {
-        Engine::Model::MaterialData& Data = Mesh.MaterialData[i];
+        if (Light.Type == Engine::Model::LightData::LightType::Point)
+            PointLights.push_back({Light.Position, {}, Light.Color, Light.Intensity, 0, 0});
+        else if (Light.Type == Engine::Model::LightData::LightType::Directional)
+            DirectionalLights.push_back({{}, Light.Direction, Light.Color, Light.Intensity, 0, 0});
+        else if (Light.Type == Engine::Model::LightData::LightType::Spot)
+            Spotlights.push_back({Light.Position, Light.Direction, Light.Color, Light.Intensity, Light.InnerCone, Light.OuterCone});
+    }
 
-        Engine::Material* NewMaterial = new Engine::Material(
-            "assets/shaders/deferred/vert.glsl",
-            "assets/shaders/deferred/frag.glsl"
-        );
-
+    for (size_t i = 0; i < Mesh.MaterialData.size(); ++i)
+    {
+        Engine::Model::MaterialData &Data = Mesh.MaterialData[i];
+        Engine::Material *NewMaterial = new Engine::Material("Assets/Shaders/Deferred/Vert.glsl", "Assets/Shaders/Deferred/Frag.glsl");
         NewMaterial->SetUniform("Color", Data.DiffuseColor);
-
-        if (!Data.DiffuseTextures.empty()) {
-            NewMaterial->LoadTexture(0, "assets/models/" + Data.DiffuseTextures[0]);
+        if (!Data.DiffuseTextures.empty())
+        {
+            NewMaterial->LoadTexture(0, "Assets/Models/" + Data.DiffuseTextures[0]);
             NewMaterial->SetUniform("UseTexture", true);
         }
-        if (!Data.NormalTextures.empty()) {
-            NewMaterial->LoadTexture(1, "assets/models/" + Data.NormalTextures[0]);
+        if (!Data.NormalTextures.empty())
+        {
+            NewMaterial->LoadTexture(1, "Assets/Models/" + Data.NormalTextures[0]);
             NewMaterial->SetUniform("UseNormalMap", true);
         }
-
         AssignedMaterials[i] = NewMaterial;
     }
 
-    std::vector<Engine::Material*> MeshMaterials;
-    
-    for (size_t i = 0; i < Mesh.Meshes.size(); i++)
-    {
-        unsigned int MaterialIndex = Mesh.Meshes[i].MaterialIndex;
-        MeshMaterials.push_back(AssignedMaterials[MaterialIndex]);
-    }
+    std::vector<Engine::Material *> MeshMaterials;
+    for (const auto &MeshInstance : Mesh.Meshes)
+        MeshMaterials.push_back(AssignedMaterials[MeshInstance.MaterialIndex]);
 
-    Model = new Engine::Model::ModelInstance(
-        Mesh,
-        MeshMaterials,
-        glm::mat4(1.0f)
-    );
+    Model = new Engine::Model::ModelInstance(Mesh, MeshMaterials, glm::mat4(1.0f));
 }
 
 void RenderModel()
 {
-    glm::mat4 ModelMatrix = glm::mat4(1.0f);
-    ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, -50.0f, 0.0f));
-    ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.25f, 0.25f,0.25f));
+    glm::mat4 ModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -50.0f, 0.0f));
+    ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.25f));
     Model->Transform = ModelMatrix;
 
     Engine::Model::DrawModelInstances({*Model}, &MainCamera);
@@ -201,21 +112,43 @@ void RenderModel()
 
 void CalculateFPS()
 {
-    float currentTime = glfwGetTime();
-    DeltaTime = currentTime - LastTime;
-    LastTime = currentTime;
+    DeltaTime = glfwGetTime() - LastTime;
+    LastTime = glfwGetTime();
+    FPS = (DeltaTime > 0) ? 1.0f / DeltaTime : FPS;
+}
 
-    if (DeltaTime > 0.0f)
+void SetLights(const std::vector<Light>& Lights, const std::string& Prefix)
+{
+    RenderTargetSprite->GetMaterial()->SetUniform("Num" + Prefix, (int)Lights.size());
+
+    for (unsigned int i = 0; i < Lights.size(); i++)
     {
-        FPS = 1.0f / DeltaTime; // FPS = 1 / DeltaTime
+        std::string Index = std::to_string(i);
+        RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Color").c_str(), Lights[i].Color);
+        RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Intensity").c_str(), Lights[i].Intensity);
+        
+        if (Prefix == "SpotLights")
+        {
+            RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Cutoff").c_str(), Lights[i].CutOff);
+            RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].OuterCutoff").c_str(), Lights[i].OuterCutOff);
+        }
+        
+        if (Prefix == "SpotLights" || Prefix == "PointLights")
+        {
+            RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Position").c_str(), Lights[i].Position);
+        }
+        
+        if (Prefix == "DirectionalLights")
+        {
+            RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Direction").c_str(), Lights[i].Direction);
+        }
     }
 }
 
+
 void Render(GLFWwindow *Window)
 {
-    glm::mat4 RotationMatrix = glm::rotate(glm::mat4(1.0f), (glm::mediump_float32)glm::radians(glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    MainCamera.SetRotation(RotationMatrix);
-
+    MainCamera.SetRotation(glm::rotate(glm::mat4(1.0f), (glm::float32)glm::radians(glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
     glfwPollEvents();
 
     SceneRenderTarget->Resize(glm::vec2(WindowWidth, WindowHeight));
@@ -225,71 +158,45 @@ void Render(GLFWwindow *Window)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     RenderModel();
-
     SceneRenderTarget->Unbind();
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->Textures[0]); // Albedo
-    RenderTargetSprite->GetMaterial()->SetTexture(1, SceneRenderTarget->Textures[1]); // Normal
-    RenderTargetSprite->GetMaterial()->SetTexture(2, SceneRenderTarget->Textures[2]); // Position
-    RenderTargetSprite->GetMaterial()->SetTexture(3, SceneRenderTarget->Textures[4]); // Metallic
-    RenderTargetSprite->GetMaterial()->SetTexture(4, SceneRenderTarget->Textures[5]); // Smoothness
-    RenderTargetSprite->GetMaterial()->SetTexture(5, SceneRenderTarget->Textures[6]); // Emission
+    // Set the textures to the material for rendering the final image
+    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->Textures[0]);
+    RenderTargetSprite->GetMaterial()->SetTexture(1, SceneRenderTarget->Textures[1]);
+    RenderTargetSprite->GetMaterial()->SetTexture(2, SceneRenderTarget->Textures[2]);
+    RenderTargetSprite->GetMaterial()->SetTexture(3, SceneRenderTarget->Textures[4]);
+    RenderTargetSprite->GetMaterial()->SetTexture(4, SceneRenderTarget->Textures[5]);
+    RenderTargetSprite->GetMaterial()->SetTexture(5, SceneRenderTarget->Textures[6]);
 
-    // Pass all the textures to the shader
+    // Pass texture uniforms to the shader
     RenderTargetSprite->GetMaterial()->SetUniform("NormalTexture", 1);
     RenderTargetSprite->GetMaterial()->SetUniform("PositionTexture", 2);
     RenderTargetSprite->GetMaterial()->SetUniform("MetallicTexture", 3);
     RenderTargetSprite->GetMaterial()->SetUniform("RoughnessTexture", 4);
     RenderTargetSprite->GetMaterial()->SetUniform("EmissionTexture", 5);
-
     RenderTargetSprite->GetMaterial()->SetUniform("ViewPosition", MainCamera.GetPosition());
 
-    // Set Point Lights
-    RenderTargetSprite->GetMaterial()->SetUniform("NumPointLights", (int)pointLights.size());
-    for (size_t i = 0; i < pointLights.size(); i++)
-    {
-        std::string index = std::to_string(i);
-        RenderTargetSprite->GetMaterial()->SetUniform(("PointLights[" + index + "].Position").c_str(), pointLights[i].Position);
-        RenderTargetSprite->GetMaterial()->SetUniform(("PointLights[" + index + "].Color").c_str(), pointLights[i].Color);
-        RenderTargetSprite->GetMaterial()->SetUniform(("PointLights[" + index + "].Intensity").c_str(), pointLights[i].Intensity);
-    }
+    // Call SetLights for each light type
+    SetLights(PointLights, "PointLights");
+    SetLights(DirectionalLights, "DirectionalLights");
+    SetLights(Spotlights, "SpotLights");
 
-    // Set Directional Lights
-    RenderTargetSprite->GetMaterial()->SetUniform("NumDirectionalLights", (int)directionalLights.size());
-    for (size_t i = 0; i < directionalLights.size(); i++)
-    {
-        std::string index = std::to_string(i);
-        RenderTargetSprite->GetMaterial()->SetUniform(("DirectionalLights[" + index + "].Direction").c_str(), directionalLights[i].Direction);
-        RenderTargetSprite->GetMaterial()->SetUniform(("DirectionalLights[" + index + "].Color").c_str(), directionalLights[i].Color);
-        RenderTargetSprite->GetMaterial()->SetUniform(("DirectionalLights[" + index + "].Intensity").c_str(), directionalLights[i].Intensity);
-    }
-
-    RenderTargetSprite->GetMaterial()->SetUniform("NumSpotLights", (int)spotlights.size());
-    for (size_t i = 0; i < spotlights.size(); i++)
-    {
-        std::string index = std::to_string(i);
-        RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Position").c_str(), spotlights[i].Position);
-        RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Direction").c_str(), spotlights[i].Direction);
-        RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Color").c_str(), spotlights[i].Color);
-        RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Intensity").c_str(), spotlights[i].Intensity);
-        RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Cutoff").c_str(), spotlights[i].CutOff);
-        RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].OuterCutoff").c_str(), spotlights[i].OuterCutOff);
-    }
-
+    // Render the sprite with the updated material (which has all the light uniforms)
     RenderTargetSprite->SetSize(glm::vec2(WindowWidth, WindowHeight));
     RenderTargetSprite->Render();
 
     // FPS Calculation and Display
     CalculateFPS();
-    std::stringstream ss;
-    ss << "FPS: " << static_cast<int>(FPS);
-    RenderText(ss.str());
+    std::stringstream SS;
+    SS << "FPS: " << static_cast<int>(FPS);
+    RenderText(SS.str());
 
     glfwSwapBuffers(Window);
 }
+
 
 void FramebufferSizeCallback(GLFWwindow *Window, int Width, int Height)
 {
@@ -307,7 +214,6 @@ int main()
         std::cerr << "Failed to initialize GLFW!" << std::endl;
         return -1;
     }
-
     GLFWwindow *Window = glfwCreateWindow(WindowWidth, WindowHeight, "SPONZAAA!!!", nullptr, nullptr);
     if (!Window)
     {
@@ -318,7 +224,6 @@ int main()
 
     glfwMakeContextCurrent(Window);
     glfwSetFramebufferSizeCallback(Window, FramebufferSizeCallback);
-
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD!" << std::endl;
@@ -333,26 +238,19 @@ int main()
     MainCamera.SetPosition(glm::vec3(0, 0, 1));
 
     while (!glfwWindowShouldClose(Window))
-    {
         Render(Window);
-    }
 
-    for(unsigned int i = 0; i < Model->Materials.size(); i++){
-        delete Model->Materials[i];
-    }
-
+    for (auto &mat : Model->Materials)
+        delete mat;
     Engine::Model::UnloadModelInstance(*Model);
 
     delete FontMaterial;
     delete RenderTargetMaterial;
-
     delete UIText;
     delete RenderTargetSprite;
-
     delete SceneRenderTarget;
 
     glfwDestroyWindow(Window);
     glfwTerminate();
-
     return 0;
 }

@@ -37,12 +37,12 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path)
 
         if (AssimpLight->mType == aiLightSource_DIRECTIONAL)
         {
-            Light.Type = LightData::LightType::DIRECTIONAL;
+            Light.Type = LightData::LightType::Directional;
             Light.Direction = glm::vec3(AssimpLight->mDirection.x, AssimpLight->mDirection.y, AssimpLight->mDirection.z);
         }
         else if (AssimpLight->mType == aiLightSource_POINT)
         {
-            Light.Type = LightData::LightType::POINT;
+            Light.Type = LightData::LightType::Point;
             Light.Position = glm::vec3(AssimpLight->mPosition.x, AssimpLight->mPosition.y, AssimpLight->mPosition.z);
             Light.Constant = AssimpLight->mAttenuationConstant;
             Light.Linear = AssimpLight->mAttenuationLinear;
@@ -50,7 +50,7 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path)
         }
         else if (AssimpLight->mType == aiLightSource_SPOT)
         {
-            Light.Type = LightData::LightType::SPOT;
+            Light.Type = LightData::LightType::Spot;
             Light.Position = glm::vec3(AssimpLight->mPosition.x, AssimpLight->mPosition.y, AssimpLight->mPosition.z);
             Light.Direction = glm::vec3(AssimpLight->mDirection.x, AssimpLight->mDirection.y, AssimpLight->mDirection.z);
             Light.InnerCone = AssimpLight->mAngleInnerCone;
@@ -58,7 +58,7 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path)
         }
         else
         {
-            Light.Type = LightData::LightType::AMBIENT;
+            Light.Type = LightData::LightType::Ambient;
         }
 
         // Extract light color
