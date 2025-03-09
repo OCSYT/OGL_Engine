@@ -54,7 +54,7 @@ namespace Engine
         void SetUniform(const std::string &Name, const glm::mat4 &Value);
 
         void LoadTexture(int Unit, const std::string &TexturePath,
-                         GLint MinFilter = GL_LINEAR,
+                         GLint MinFilter = GL_LINEAR_MIPMAP_LINEAR,
                          GLint MagFilter = GL_LINEAR);
 
         void SetTexture(int Unit, unsigned int TextureID);

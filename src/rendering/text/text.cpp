@@ -138,8 +138,9 @@ namespace Engine
     void Text::Render(const std::string &text)
     {
         float xOffset = 0.0f;
+        float yOffset = 0.0f;
         float Spacing = Scale;
-
+        float LineHeight = Scale;
         for (char c : text)
         {
             if (c == ' ')
@@ -147,22 +148,30 @@ namespace Engine
                 xOffset += Spacing;
                 continue;
             }
-
+    
+            if (c == '\n')
+            {
+                xOffset = 0.0f;
+                yOffset -= LineHeight;
+                continue;
+            }
+    
             auto it = CharacterMap.find(std::string(1, c));
             if (it == CharacterMap.end())
             {
                 std::cout << "Warning: Character '" << c << "' not found in the CharacterMap!" << std::endl;
                 c = '?';
             }
-
+    
             glm::vec4 uv = CharUVs[CharacterMap[std::string(1, c)]];
             SpriteRenderer->SetSize(glm::vec2(Scale, Scale));
-            SpriteRenderer->SetPosition(Position + glm::vec2(xOffset, 0));
+            SpriteRenderer->SetPosition(Position + glm::vec2(xOffset, yOffset));
             SpriteRenderer->SetUV(uv);
             xOffset += Spacing;
             SpriteRenderer->Render();
         }
     }
+    
 
     void Text::SetPosition(const glm::vec2 &position)
     {
