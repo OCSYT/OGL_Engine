@@ -21,7 +21,8 @@ unsigned int WindowHeight = 600;
 
 Engine::Camera MainCamera(Engine::Camera::CameraMode::Perspective, &WindowWidth, &WindowHeight);
 
-RenderTarget *SceneRenderTarget;
+Engine::RenderTarget *SceneRenderTarget;
+
 Engine::Sprite *RenderTargetSprite;
 Engine::Material *RenderTargetMaterial;
 
@@ -43,7 +44,16 @@ float FPS = 0.0f;       // Frames per second
 
 void InitRenderTarget()
 {
-    SceneRenderTarget = new RenderTarget(glm::vec2(WindowWidth, WindowHeight));
+    std::vector<Engine::RenderTarget::Attachment> Attachments = {
+        { GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE },  // Albedo
+        { GL_RGB16F, GL_RGB, GL_FLOAT },            // Normal
+        { GL_RGB16F, GL_RGB, GL_FLOAT },            // Position
+        { GL_R32F, GL_RED, GL_FLOAT },               // Depth
+        { GL_R16F, GL_RED, GL_FLOAT },              // Metallic
+        { GL_R16F, GL_RED, GL_FLOAT },              // Roughness
+        { GL_RGB16F, GL_RGB, GL_FLOAT }             // Emission
+    };
+    SceneRenderTarget = new Engine::RenderTarget(glm::vec2(WindowWidth, WindowHeight), Attachments);
     RenderTargetMaterial = new Engine::Material("assets/shaders/deferred/vert.glsl",
                                                 "assets/shaders/deferred/lighting.glsl",
                                                 {});
@@ -176,12 +186,13 @@ void Render(GLFWwindow *Window)
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->AlbedoTexture);
-    RenderTargetSprite->GetMaterial()->SetTexture(1, SceneRenderTarget->NormalTexture);
-    RenderTargetSprite->GetMaterial()->SetTexture(2, SceneRenderTarget->PositionTexture);
-    RenderTargetSprite->GetMaterial()->SetTexture(3, SceneRenderTarget->MetallicTexture);
-    RenderTargetSprite->GetMaterial()->SetTexture(4, SceneRenderTarget->RoughnessTexture);
-    RenderTargetSprite->GetMaterial()->SetTexture(5, SceneRenderTarget->EmissionTexture);
+    
+    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->Textures[0]); //Albedo
+    RenderTargetSprite->GetMaterial()->SetTexture(1, SceneRenderTarget->Textures[1]); //Normal
+    RenderTargetSprite->GetMaterial()->SetTexture(2, SceneRenderTarget->Textures[2]); //Position
+    RenderTargetSprite->GetMaterial()->SetTexture(3, SceneRenderTarget->Textures[4]); //Metallic
+    RenderTargetSprite->GetMaterial()->SetTexture(4, SceneRenderTarget->Textures[5]); //Smoothness
+    RenderTargetSprite->GetMaterial()->SetTexture(5, SceneRenderTarget->Textures[6]); //Emission
 
     // Pass all the textures to the shader
     RenderTargetSprite->GetMaterial()->SetUniform("NormalTexture", 1);
