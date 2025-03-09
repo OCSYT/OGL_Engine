@@ -12,6 +12,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <glm/glm.hpp>
+#include <algorithm>
 #include "../../util/util.h"
 #include "../materials/material.h"
 #include "../camera/camera.h"
@@ -25,12 +26,37 @@ namespace Engine
         {
             unsigned int VAO, VBO, EBO;
             unsigned int IndexCount;
+            int MaterialIndex;
         };
 
+
+        struct MaterialData {
+            glm::vec4 DiffuseColor;      // Diffuse color
+            glm::vec4 AmbientColor;      // Ambient color
+            glm::vec4 SpecularColor;     // Specular color
+            glm::vec4 EmissiveColor;     // Emissive color
+            float Shininess;             // Shininess (specular exponent)
+            float Transparency;          // Transparency factor
+        
+            std::vector<std::string> DiffuseTextures;   // Diffuse texture paths
+            std::vector<std::string> SpecularTextures;  // Specular texture paths
+            std::vector<std::string> NormalTextures;    // Normal map texture paths
+            std::vector<std::string> HeightTextures;    // Height map texture paths
+            std::vector<std::string> AmbientTextures;   // Ambient texture paths
+        
+            // Constructor to initialize default values
+            MaterialData()
+                : DiffuseColor(glm::vec4(1.0f)), // Default white color
+                  AmbientColor(glm::vec4(0.2f)),  // Default dim ambient color
+                  SpecularColor(glm::vec4(0.0f)), // Default black specular color
+                  EmissiveColor(glm::vec4(0.0f)), // Default black emissive color
+                  Shininess(32.0f),               // Default shininess value
+                  Transparency(1.0f) {}           // Default transparency (fully opaque)
+        };
         struct Mesh
         {
             std::vector<MeshData> Meshes;
-            std::vector<aiMaterial*> MaterialData;
+            std::vector<MaterialData> MaterialData;
         };
 
         struct ModelInstance

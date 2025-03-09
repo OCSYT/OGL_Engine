@@ -29,7 +29,7 @@ Engine::Material *RenderTargetMaterial;
 Engine::Material *SpriteMaterial;
 Engine::Sprite *TestSprite;
 
-Engine::Model::ModelInstance* MarkiplierModel;
+Engine::Model::ModelInstance *MarkiplierModel;
 Engine::Material *Skin;
 Engine::Material *Eye;
 Engine::Material *Glasses;
@@ -45,13 +45,13 @@ float FPS = 0.0f;       // Frames per second
 void InitRenderTarget()
 {
     std::vector<Engine::RenderTarget::Attachment> Attachments = {
-        { GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE },  // Albedo
-        { GL_RGB16F, GL_RGB, GL_FLOAT },            // Normal
-        { GL_RGB16F, GL_RGB, GL_FLOAT },            // Position
-        { GL_R32F, GL_RED, GL_FLOAT },              // Depth
-        { GL_R16F, GL_RED, GL_FLOAT },              // Metallic
-        { GL_R16F, GL_RED, GL_FLOAT },              // Roughness
-        { GL_RGB16F, GL_RGB, GL_FLOAT }             // Emission
+        {GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE}, // Albedo
+        {GL_RGB16F, GL_RGB, GL_FLOAT},           // Normal
+        {GL_RGB16F, GL_RGB, GL_FLOAT},           // Position
+        {GL_R32F, GL_RED, GL_FLOAT},             // Depth
+        {GL_R16F, GL_RED, GL_FLOAT},             // Metallic
+        {GL_R16F, GL_RED, GL_FLOAT},             // Roughness
+        {GL_RGB16F, GL_RGB, GL_FLOAT}            // Emission
     };
     SceneRenderTarget = new Engine::RenderTarget(glm::vec2(WindowWidth, WindowHeight), Attachments);
     RenderTargetMaterial = new Engine::Material("assets/shaders/deferred/vert.glsl",
@@ -77,33 +77,40 @@ void RenderText(const std::string &text)
 
 void InitMarkiplier()
 {
+    Engine::Model::Mesh Mesh = Engine::Model::LoadMesh("assets/models/Markiplier.obj");
 
-    Skin = new Engine::Material("assets/shaders/deferred/vert.glsl",
-                                "assets/shaders/deferred/frag.glsl",
-                                {"assets/textures/Markiplier/Skin.png"});
-    Skin->SetUniform("UseTexture", true);
+    std::vector<Engine::Material*> AssignedMaterials(Mesh.MaterialData.size(), nullptr);
 
-    Eye = new Engine::Material("assets/shaders/deferred/vert.glsl",
-                               "assets/shaders/deferred/frag.glsl",
-                               {"assets/textures/Markiplier/Eye.png"});
+    for (unsigned int i = 0; i < Mesh.MaterialData.size(); i++)
+    {
+        Engine::Model::MaterialData& Data = Mesh.MaterialData[i];
 
-    Eye->SetUniform("UseTexture", true);
+        Engine::Material* NewMaterial = new Engine::Material(
+            "assets/shaders/deferred/vert.glsl",
+            "assets/shaders/deferred/frag.glsl"
+        );
 
+        NewMaterial->SetUniform("Color", Data.DiffuseColor);
 
-    Glasses = new Engine::Material("assets/shaders/deferred/vert.glsl",
-                                   "assets/shaders/deferred/frag.glsl",
-                                   {});
+        if (!Data.DiffuseTextures.empty()) {
+            NewMaterial->LoadTextures({"assets/models/" + Data.DiffuseTextures[0]});
+            NewMaterial->SetUniform("UseTexture", true);
+        }
 
-    Glasses->SetUniform("Color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        AssignedMaterials[i] = NewMaterial;
+    }
 
-    Hair = new Engine::Material("assets/shaders/deferred/vert.glsl",
-                                "assets/shaders/deferred/frag.glsl",
-                                {"assets/textures/Markiplier/Hair.png"});
-    Hair->SetUniform("UseTexture", true);
+    std::vector<Engine::Material*> MeshMaterials;
+    
+    for (size_t i = 0; i < Mesh.Meshes.size(); i++)
+    {
+        unsigned int MaterialIndex = Mesh.Meshes[i].MaterialIndex;
+        MeshMaterials.push_back(AssignedMaterials[MaterialIndex]);
+    }
 
     MarkiplierModel = new Engine::Model::ModelInstance(
-        Engine::Model::LoadMesh("assets/models/Markiplier.obj"),
-        {Skin, Eye, Glasses, Hair},
+        Mesh,
+        MeshMaterials,
         glm::mat4(1.0f)
     );
 }
@@ -129,7 +136,8 @@ void CalculateFPS()
     }
 }
 
-struct PointLight {
+struct PointLight
+{
     glm::vec3 Position;
     glm::vec3 Color;
     float Intensity;
@@ -137,15 +145,15 @@ struct PointLight {
 std::vector<PointLight> pointLights = {
     // Red light
     {glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 50.0f},
-    
+
     // Blue light
     {glm::vec3(3.0f, 2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), 50.0f},
-    
-    // Green light
-    {glm::vec3(6.0f, 2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 50.0f}
-};
 
-struct DirectionalLight {
+    // Green light
+    {glm::vec3(6.0f, 2.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 50.0f}};
+
+struct DirectionalLight
+{
     glm::vec3 Direction;
     glm::vec3 Color;
     float Intensity;
@@ -154,7 +162,8 @@ std::vector<DirectionalLight> directionalLights = {
 
 };
 
-struct Spotlight {
+struct Spotlight
+{
     glm::vec3 Position;
     glm::vec3 Direction;
     glm::vec3 Color;
@@ -166,9 +175,6 @@ std::vector<Spotlight> spotlights = {
 
 };
 
-
-
-
 void Render(GLFWwindow *Window)
 {
     glfwPollEvents();
@@ -176,7 +182,7 @@ void Render(GLFWwindow *Window)
     SceneRenderTarget->Resize(glm::vec2(WindowWidth, WindowHeight));
     SceneRenderTarget->Bind();
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); 
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     RenderMarkiplier();
@@ -186,13 +192,12 @@ void Render(GLFWwindow *Window)
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    
-    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->Textures[0]); //Albedo
-    RenderTargetSprite->GetMaterial()->SetTexture(1, SceneRenderTarget->Textures[1]); //Normal
-    RenderTargetSprite->GetMaterial()->SetTexture(2, SceneRenderTarget->Textures[2]); //Position
-    RenderTargetSprite->GetMaterial()->SetTexture(3, SceneRenderTarget->Textures[4]); //Metallic
-    RenderTargetSprite->GetMaterial()->SetTexture(4, SceneRenderTarget->Textures[5]); //Smoothness
-    RenderTargetSprite->GetMaterial()->SetTexture(5, SceneRenderTarget->Textures[6]); //Emission
+    RenderTargetSprite->GetMaterial()->SetTexture(0, SceneRenderTarget->Textures[0]); // Albedo
+    RenderTargetSprite->GetMaterial()->SetTexture(1, SceneRenderTarget->Textures[1]); // Normal
+    RenderTargetSprite->GetMaterial()->SetTexture(2, SceneRenderTarget->Textures[2]); // Position
+    RenderTargetSprite->GetMaterial()->SetTexture(3, SceneRenderTarget->Textures[4]); // Metallic
+    RenderTargetSprite->GetMaterial()->SetTexture(4, SceneRenderTarget->Textures[5]); // Smoothness
+    RenderTargetSprite->GetMaterial()->SetTexture(5, SceneRenderTarget->Textures[6]); // Emission
 
     // Pass all the textures to the shader
     RenderTargetSprite->GetMaterial()->SetUniform("NormalTexture", 1);
@@ -205,7 +210,8 @@ void Render(GLFWwindow *Window)
 
     // Set Point Lights
     RenderTargetSprite->GetMaterial()->SetUniform("NumPointLights", (int)pointLights.size());
-    for (size_t i = 0; i < pointLights.size(); i++) {
+    for (size_t i = 0; i < pointLights.size(); i++)
+    {
         std::string index = std::to_string(i);
         RenderTargetSprite->GetMaterial()->SetUniform(("PointLights[" + index + "].Position").c_str(), pointLights[i].Position);
         RenderTargetSprite->GetMaterial()->SetUniform(("PointLights[" + index + "].Color").c_str(), pointLights[i].Color);
@@ -214,7 +220,8 @@ void Render(GLFWwindow *Window)
 
     // Set Directional Lights
     RenderTargetSprite->GetMaterial()->SetUniform("NumDirectionalLights", (int)directionalLights.size());
-    for (size_t i = 0; i < directionalLights.size(); i++) {
+    for (size_t i = 0; i < directionalLights.size(); i++)
+    {
         std::string index = std::to_string(i);
         RenderTargetSprite->GetMaterial()->SetUniform(("DirectionalLights[" + index + "].Direction").c_str(), directionalLights[i].Direction);
         RenderTargetSprite->GetMaterial()->SetUniform(("DirectionalLights[" + index + "].Color").c_str(), directionalLights[i].Color);
@@ -222,7 +229,8 @@ void Render(GLFWwindow *Window)
     }
 
     RenderTargetSprite->GetMaterial()->SetUniform("NumSpotLights", (int)spotlights.size());
-    for (size_t i = 0; i < spotlights.size(); i++) {
+    for (size_t i = 0; i < spotlights.size(); i++)
+    {
         std::string index = std::to_string(i);
         RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Position").c_str(), spotlights[i].Position);
         RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Direction").c_str(), spotlights[i].Direction);
@@ -231,7 +239,6 @@ void Render(GLFWwindow *Window)
         RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].Cutoff").c_str(), spotlights[i].CutOff);
         RenderTargetSprite->GetMaterial()->SetUniform(("SpotLights[" + index + "].OuterCutoff").c_str(), spotlights[i].OuterCutOff);
     }
-
 
     RenderTargetSprite->SetSize(glm::vec2(WindowWidth, WindowHeight));
     RenderTargetSprite->Render();
@@ -244,7 +251,6 @@ void Render(GLFWwindow *Window)
 
     glfwSwapBuffers(Window);
 }
-
 
 void FramebufferSizeCallback(GLFWwindow *Window, int Width, int Height)
 {

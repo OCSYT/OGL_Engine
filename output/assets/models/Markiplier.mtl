@@ -1,4 +1,4 @@
-# Blender 4.2.3 LTS MTL File: 'Youtuber.blend'
+# Blender 4.2.3 LTS MTL File: 'None'
 # www.blender.org
 
 newmtl Gafas
@@ -18,19 +18,17 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd markiplier/source/Textures/SinMarmol/Markiplier_Diffuse+AO.png
-map_Ns markiplier/source/Textures/Markiplier_Roughness.png
-map_Bump -bm 1.000000 markiplier/source/Textures/SinMarmol/Markiplier_Normal_OpenGL.png
+map_Kd ../textures/Markiplier/Skin.png
 
-newmtl Ojos
+newmtl Material.001
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
-Ni 1.450000
+Ni 1.500000
 d 1.000000
 illum 2
-map_Kd markiplier/source/Textures/SinMarmol/Eye.jpg
+map_Kd ../textures/Markiplier/Eye.png
 
 newmtl Pelo
 Ns 0.000000
@@ -40,5 +38,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd markiplier/source/Textures/SinMarmol/Pelo_Base_Color.png
-map_Bump -bm 1.000000 markiplier/source/Textures/SinMarmol/Pelo_Normal_OpenGL.png
+map_Kd ../textures/Markiplier/Hair.png

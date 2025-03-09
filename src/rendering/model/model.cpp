@@ -13,10 +13,92 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
         return ModelMesh;
     }
 
+    // Resize the MaterialData vector to match the number of materials in the scene
+    ModelMesh.MaterialData.resize(Scene->mNumMaterials);
+
+    // Iterate through all materials in the scene
+    for (unsigned int i = 0; i < Scene->mNumMaterials; i++) {
+        aiMaterial* AssimpMaterial = Scene->mMaterials[i];
+        MaterialData material;
+
+        // Extract Diffuse Color
+        aiColor4D DiffuseColor;
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, DiffuseColor)) {
+            material.DiffuseColor = glm::vec4(DiffuseColor.r, DiffuseColor.g, DiffuseColor.b, DiffuseColor.a);
+        }
+
+        // Extract Ambient Color
+        aiColor4D AmbientColor;
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_AMBIENT, AmbientColor)) {
+            material.AmbientColor = glm::vec4(AmbientColor.r, AmbientColor.g, AmbientColor.b, AmbientColor.a);
+        }
+
+        // Extract Specular Color
+        aiColor4D SpecularColor;
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_SPECULAR, SpecularColor)) {
+            material.SpecularColor = glm::vec4(SpecularColor.r, SpecularColor.g, SpecularColor.b, SpecularColor.a);
+        }
+
+        // Extract Emissive Color
+        aiColor4D EmissiveColor;
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_COLOR_EMISSIVE, EmissiveColor)) {
+            material.EmissiveColor = glm::vec4(EmissiveColor.r, EmissiveColor.g, EmissiveColor.b, EmissiveColor.a);
+        }
+
+        // Extract Shininess (specular exponent)
+        float Shininess;
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_SHININESS, Shininess)) {
+            material.Shininess = Shininess;
+        }
+
+        // Extract Transparency (opacity)
+        float Transparency;
+        if (AI_SUCCESS == AssimpMaterial->Get(AI_MATKEY_OPACITY, Transparency)) {
+            material.Transparency = Transparency;
+        }
+
+        // Extract Diffuse Textures
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_DIFFUSE); j++) {
+            aiString texturePath;
+            AssimpMaterial->GetTexture(aiTextureType_DIFFUSE, j, &texturePath);
+            material.DiffuseTextures.push_back(texturePath.C_Str());
+        }
+
+        // Extract Specular Textures
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_SPECULAR); j++) {
+            aiString texturePath;
+            AssimpMaterial->GetTexture(aiTextureType_SPECULAR, j, &texturePath);
+            material.SpecularTextures.push_back(texturePath.C_Str());
+        }
+
+        // Extract Normal Textures
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_NORMALS); j++) {
+            aiString texturePath;
+            AssimpMaterial->GetTexture(aiTextureType_NORMALS, j, &texturePath);
+            material.NormalTextures.push_back(texturePath.C_Str());
+        }
+
+        // Extract Height Textures
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_HEIGHT); j++) {
+            aiString texturePath;
+            AssimpMaterial->GetTexture(aiTextureType_HEIGHT, j, &texturePath);
+            material.HeightTextures.push_back(texturePath.C_Str());
+        }
+
+        // Extract Ambient Textures
+        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_AMBIENT); j++) {
+            aiString texturePath;
+            AssimpMaterial->GetTexture(aiTextureType_AMBIENT, j, &texturePath);
+            material.AmbientTextures.push_back(texturePath.C_Str());
+        }
+
+        // Store the material data in the ModelMesh's MaterialData vector
+        ModelMesh.MaterialData[i] = material;
+    }
+
+    // Process Meshes in the scene
     for (unsigned int MeshIndex = 0; MeshIndex < Scene->mNumMeshes; MeshIndex++) {
         aiMesh* AssimpMesh = Scene->mMeshes[MeshIndex];
-        aiMaterial* AssimpMaterial = Scene->mMaterials[AssimpMesh->mMaterialIndex];  // Get the material
-
         MeshData Mesh;
         std::vector<float> Vertices;
         std::vector<unsigned int> Indices;
@@ -64,11 +146,10 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
 
         glBindVertexArray(0);
         Mesh.IndexCount = static_cast<unsigned int>(Indices.size());
+        Mesh.MaterialIndex = AssimpMesh->mMaterialIndex;
         ModelMesh.Meshes.push_back(Mesh);
-
-        // Extract and assign material data
-        ModelMesh.MaterialData.push_back(AssimpMaterial);
     }
+
     return ModelMesh;
 }
 
@@ -172,5 +253,6 @@ void Engine::Model::UnloadMesh(Mesh& ModelMesh) {
         Mesh.IndexCount = 0;
     }
     ModelMesh.Meshes.clear();
+    ModelMesh.MaterialData.clear();
     delete &ModelMesh;
 }
