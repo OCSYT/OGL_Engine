@@ -48,7 +48,7 @@ void InitRenderTarget()
         { GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE },  // Albedo
         { GL_RGB16F, GL_RGB, GL_FLOAT },            // Normal
         { GL_RGB16F, GL_RGB, GL_FLOAT },            // Position
-        { GL_R32F, GL_RED, GL_FLOAT },               // Depth
+        { GL_R32F, GL_RED, GL_FLOAT },              // Depth
         { GL_R16F, GL_RED, GL_FLOAT },              // Metallic
         { GL_R16F, GL_RED, GL_FLOAT },              // Roughness
         { GL_RGB16F, GL_RGB, GL_FLOAT }             // Emission
