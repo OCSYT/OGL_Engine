@@ -34,6 +34,7 @@ unsigned int Engine::Util::LoadTexture(std::string Path, GLint MinFilter, GLint 
         if (MinFilter == GL_LINEAR_MIPMAP_LINEAR || MinFilter == GL_NEAREST_MIPMAP_NEAREST || MinFilter == GL_NEAREST_MIPMAP_LINEAR || MinFilter == GL_LINEAR_MIPMAP_NEAREST) {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
+        std::cout << "Loaded texture: " << Path << std::endl;
     } else {
         std::cerr << "Failed to load texture: " << Path << std::endl;
     }

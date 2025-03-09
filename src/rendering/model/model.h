@@ -30,6 +30,7 @@ namespace Engine
         struct Mesh
         {
             std::vector<MeshData> Meshes;
+            std::vector<aiMaterial*> MaterialData;
         };
 
         struct ModelInstance

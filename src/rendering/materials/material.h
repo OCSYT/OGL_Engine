@@ -53,10 +53,18 @@ namespace Engine
         void SetUniform(const std::string &Name, const glm::vec4 &Value);
         void SetUniform(const std::string &Name, const glm::mat4 &Value);
 
-        void LoadTexture(int Unit, const std::string &TexturePath, GLint MinFilter, GLint MagFilter);
+        void LoadTexture(int Unit, const std::string &TexturePath,
+                         GLint MinFilter = GL_LINEAR,
+                         GLint MagFilter = GL_LINEAR);
+
         void SetTexture(int Unit, unsigned int TextureID);
-        void LoadTextures(const std::vector<std::string> &TexturePaths, const std::vector<std::pair<GLint, GLint>> &FilterOptions);
-        void LoadTexturesFromData(const std::vector<std::tuple<const unsigned char *, int, int, int>> &TextureData, const std::vector<std::pair<GLint, GLint>> &FilterOptions);
+
+        void LoadTextures(const std::vector<std::string> &TexturePaths,
+                          const std::vector<std::pair<GLint, GLint>> &FilterOptions = {});
+
+        void LoadTexturesFromData(const std::vector<std::tuple<const unsigned char *, int, int, int>> &TextureData,
+                                  const std::vector<std::pair<GLint, GLint>> &FilterOptions = {});
+
         void UnloadTextures();
         void RemoveTexture(int Index);
 

@@ -15,11 +15,13 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
 
     for (unsigned int MeshIndex = 0; MeshIndex < Scene->mNumMeshes; MeshIndex++) {
         aiMesh* AssimpMesh = Scene->mMeshes[MeshIndex];
+        aiMaterial* AssimpMaterial = Scene->mMaterials[AssimpMesh->mMaterialIndex];  // Get the material
 
         MeshData Mesh;
         std::vector<float> Vertices;
         std::vector<unsigned int> Indices;
 
+        // Extracting vertex data
         for (unsigned int i = 0; i < AssimpMesh->mNumVertices; i++) {
             aiVector3D Pos = AssimpMesh->mVertices[i];
             aiVector3D Normal = AssimpMesh->HasNormals() ? AssimpMesh->mNormals[i] : aiVector3D(0, 0, 0);
@@ -33,6 +35,7 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
             });
         }
 
+        // Extracting face data
         for (unsigned int i = 0; i < AssimpMesh->mNumFaces; i++) {
             aiFace Face = AssimpMesh->mFaces[i];
             for (unsigned int j = 0; j < Face.mNumIndices; j++) {
@@ -62,6 +65,9 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path) {
         glBindVertexArray(0);
         Mesh.IndexCount = static_cast<unsigned int>(Indices.size());
         ModelMesh.Meshes.push_back(Mesh);
+
+        // Extract and assign material data
+        ModelMesh.MaterialData.push_back(AssimpMaterial);
     }
     return ModelMesh;
 }
