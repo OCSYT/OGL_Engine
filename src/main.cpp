@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define NOMINMAX
+#include <thread>
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -214,51 +215,58 @@ void FramebufferSizeCallback(GLFWwindow *Window, int Width, int Height)
     glViewport(0, 0, WindowWidth, WindowHeight);
 }
 
-int main()
+void RunEngine()
 {
     if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW!" << std::endl;
-        return -1;
+        return;
     }
-    GLFWwindow *Window = glfwCreateWindow(WindowWidth, WindowHeight, "SPONZAAA!!!", nullptr, nullptr);
+    
+    GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "SPONZAAA!!!", nullptr, nullptr);
     if (!Window)
     {
         std::cerr << "Failed to create GLFW window!" << std::endl;
         glfwTerminate();
-        return -1;
+        return;
     }
-
+    
     glfwMakeContextCurrent(Window);
     glfwSetFramebufferSizeCallback(Window, FramebufferSizeCallback);
+    
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD!" << std::endl;
         glfwDestroyWindow(Window);
         glfwTerminate();
-        return -1;
+        return;
     }
-
+    
     InitRenderTarget();
     InitText();
     InitModel();
     MainCamera.SetPosition(glm::vec3(0, 0, 1));
-
+    
     while (!glfwWindowShouldClose(Window))
         Render(Window);
-
-    for (auto &mat : Model->Materials)
+    
+    for (auto& mat : Model->Materials)
         delete mat;
     Engine::Model::UnloadModelInstance(*Model);
-
+    
     delete FontMaterial;
     delete RenderTargetMaterial;
     delete UIText;
     delete RenderTargetSprite;
     delete SceneRenderTarget;
-
+    
     glfwDestroyWindow(Window);
     glfwTerminate();
+}
+
+int main()
+{
+    std::thread EngineThread(RunEngine);
+    EngineThread.join();
     return 0;
 }
-    
