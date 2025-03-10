@@ -89,7 +89,14 @@ void InitModel()
         if (!Data.NormalTextures.empty())
         {
             NewMaterial->LoadTexture(1, "Assets/Models/" + Data.NormalTextures[0]);
-            NewMaterial->SetUniform("UseNormalMap", true);
+            NewMaterial->SetUniform("UseNormal", true);
+        }
+        if (!Data.SpecularTextures.empty())
+        {
+            NewMaterial->LoadTexture(2, "Assets/Models/" + Data.SpecularTextures[0]);
+            NewMaterial->LoadTexture(3, "Assets/Models/" + Data.SpecularTextures[0]);
+            NewMaterial->SetUniform("UseMetallic", true);
+            NewMaterial->SetUniform("UseRoughness", true);
         }
         AssignedMaterials[i] = NewMaterial;
     }
@@ -254,3 +261,4 @@ int main()
     glfwTerminate();
     return 0;
 }
+    

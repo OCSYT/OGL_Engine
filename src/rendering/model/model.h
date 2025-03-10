@@ -47,7 +47,6 @@ namespace Engine
             float OuterCone;
         };
         
-
         struct MaterialData {
             glm::vec4 DiffuseColor;      // Diffuse color
             glm::vec4 AmbientColor;      // Ambient color
@@ -56,21 +55,31 @@ namespace Engine
             float Shininess;             // Shininess (specular exponent)
             float Transparency;          // Transparency factor
         
-            std::vector<std::string> DiffuseTextures;   // Diffuse texture paths
-            std::vector<std::string> SpecularTextures;  // Specular texture paths
-            std::vector<std::string> NormalTextures;    // Normal map texture paths
-            std::vector<std::string> HeightTextures;    // Height map texture paths
-            std::vector<std::string> AmbientTextures;   // Ambient texture paths
+            // Texture paths
+            std::vector<std::string> DiffuseTextures;      // Diffuse texture paths
+            std::vector<std::string> SpecularTextures;     // Specular texture paths
+            std::vector<std::string> AmbientTextures;      // Ambient texture paths
+            std::vector<std::string> EmissiveTextures;     // Emissive texture paths
+            std::vector<std::string> HeightTextures;       // Height (bump) texture paths
+            std::vector<std::string> NormalTextures;       // Normal map texture paths
+            std::vector<std::string> ShininessTextures;    // Shininess texture paths
+            std::vector<std::string> OpacityTextures;      // Opacity texture paths
+            std::vector<std::string> DisplacementTextures; // Displacement map texture paths
+            std::vector<std::string> LightmapTextures;     // Lightmap texture paths
+            std::vector<std::string> ReflectionTextures;   // Reflection texture paths
+            std::vector<std::string> UnknownTextures;      // Any other unknown textures
         
             // Constructor to initialize default values
             MaterialData()
-                : DiffuseColor(glm::vec4(1.0f)), // Default white color
-                  AmbientColor(glm::vec4(0.2f)),  // Default dim ambient color
-                  SpecularColor(glm::vec4(0.0f)), // Default black specular color
-                  EmissiveColor(glm::vec4(0.0f)), // Default black emissive color
-                  Shininess(32.0f),               // Default shininess value
-                  Transparency(1.0f) {}           // Default transparency (fully opaque)
+                : DiffuseColor(glm::vec4(1.0f)),  // Default white diffuse
+                  AmbientColor(glm::vec4(0.2f)),  // Default dim ambient
+                  SpecularColor(glm::vec4(0.0f)), // Default black specular
+                  EmissiveColor(glm::vec4(0.0f)), // Default black emissive
+                  Shininess(32.0f),               // Default shininess
+                  Transparency(1.0f) {}            // Fully opaque by default
         };
+        
+        
         struct Mesh
         {
             std::vector<MeshData> Meshes;

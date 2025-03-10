@@ -1,6 +1,5 @@
 #include "model.h"
 
-
 Engine::Model::Mesh::~Mesh()
 {
     Meshes.clear();
@@ -14,11 +13,11 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path)
     std::string FullPathStr = FullPath.string();
     const char *FullPathString = FullPathStr.c_str();
     Assimp::Importer Importer;
-    const aiScene *Scene = Importer.ReadFile(FullPathString,  
-        aiProcess_CalcTangentSpace       |
-        aiProcess_Triangulate            |
-        aiProcess_JoinIdenticalVertices  |
-        aiProcess_SortByPType);
+    const aiScene *Scene = Importer.ReadFile(FullPathString,
+                                             aiProcess_CalcTangentSpace |
+                                                 aiProcess_Triangulate |
+                                                 aiProcess_JoinIdenticalVertices |
+                                                 aiProcess_SortByPType);
 
     Mesh ModelMesh;
 
@@ -120,47 +119,39 @@ Engine::Model::Mesh Engine::Model::LoadMesh(std::string Path)
             material.Transparency = Transparency;
         }
 
-        // Extract Diffuse Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_DIFFUSE); j++)
+        // Extract Texture Types
+        struct TextureTypeMapping
         {
-            aiString texturePath;
-            AssimpMaterial->GetTexture(aiTextureType_DIFFUSE, j, &texturePath);
-            material.DiffuseTextures.push_back(texturePath.C_Str());
+            aiTextureType Type;
+            std::vector<std::string> &Target;
+        } mappings[] = {
+            {aiTextureType_DIFFUSE, material.DiffuseTextures},
+            {aiTextureType_SPECULAR, material.SpecularTextures},
+            {aiTextureType_AMBIENT, material.AmbientTextures},
+            {aiTextureType_EMISSIVE, material.EmissiveTextures},
+            {aiTextureType_HEIGHT, material.HeightTextures},
+            {aiTextureType_NORMALS, material.NormalTextures},
+            {aiTextureType_SHININESS, material.ShininessTextures},
+            {aiTextureType_OPACITY, material.OpacityTextures},
+            {aiTextureType_DISPLACEMENT, material.DisplacementTextures},
+            {aiTextureType_LIGHTMAP, material.LightmapTextures},
+            {aiTextureType_REFLECTION, material.ReflectionTextures},
+            {aiTextureType_UNKNOWN, material.UnknownTextures}};
+
+        for (auto &mapping : mappings)
+        {
+            unsigned int textureCount = AssimpMaterial->GetTextureCount(mapping.Type);
+            for (unsigned int j = 0; j < textureCount; j++)
+            {
+                aiString texturePath;
+                if (AssimpMaterial->GetTexture(mapping.Type, j, &texturePath) == AI_SUCCESS)
+                {
+                    mapping.Target.push_back(texturePath.C_Str());
+                }
+            }
         }
 
-        // Extract Specular Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_SPECULAR); j++)
-        {
-            aiString texturePath;
-            AssimpMaterial->GetTexture(aiTextureType_SPECULAR, j, &texturePath);
-            material.SpecularTextures.push_back(texturePath.C_Str());
-        }
-
-        // Extract Normal Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_NORMALS); j++)
-        {
-            aiString texturePath;
-            AssimpMaterial->GetTexture(aiTextureType_NORMALS, j, &texturePath);
-            material.NormalTextures.push_back(texturePath.C_Str());
-        }
-
-        // Extract Height Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_HEIGHT); j++)
-        {
-            aiString texturePath;
-            AssimpMaterial->GetTexture(aiTextureType_HEIGHT, j, &texturePath);
-            material.HeightTextures.push_back(texturePath.C_Str());
-        }
-
-        // Extract Ambient Textures
-        for (unsigned int j = 0; j < AssimpMaterial->GetTextureCount(aiTextureType_AMBIENT); j++)
-        {
-            aiString texturePath;
-            AssimpMaterial->GetTexture(aiTextureType_AMBIENT, j, &texturePath);
-            material.AmbientTextures.push_back(texturePath.C_Str());
-        }
-
-        // Store the material data in the ModelMesh's MaterialData vector
+        // Store the material data
         ModelMesh.MaterialData[i] = material;
     }
 

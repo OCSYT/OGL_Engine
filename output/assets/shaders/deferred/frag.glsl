@@ -27,7 +27,7 @@ uniform bool UseTexture;
 uniform bool UseEmission;
 uniform bool UseMetallic;
 uniform bool UseRoughness;
-uniform bool UseNormalMap;
+uniform bool UseNormal;
 uniform vec4 Color;
 
 // Ordered Dither Matrix (4x4 Bayer matrix)
@@ -77,7 +77,7 @@ void main() {
 
     // Normal Mapping
     vec3 normal = normalize(FragNormal);
-    if (UseNormalMap) {
+    if (UseNormal) {
         vec3 tangentNormal = texture(NormalTexture, TexCoord).rgb * 2.0 - 1.0;
 
         // Construct TBN matrix
