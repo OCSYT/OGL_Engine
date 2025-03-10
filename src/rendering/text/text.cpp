@@ -152,7 +152,7 @@ namespace Engine
             if (c == '\n')
             {
                 xOffset = 0.0f;
-                yOffset -= LineHeight;
+                yOffset += LineHeight;
                 continue;
             }
     

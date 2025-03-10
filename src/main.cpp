@@ -56,7 +56,7 @@ void RenderText(const std::string &Text)
     float ScaleFactor = std::min(WindowWidth, WindowHeight) / 10.0f;
     UIText->SetPosition(glm::vec2(ScaleFactor / 2, ScaleFactor / 2));
     UIText->SetScale(ScaleFactor / 3);
-    UIText->Render(Text.c_str());
+    UIText->Render(Text + "\n" + "Sponza Scene");
 }
 
 void InitModel()
