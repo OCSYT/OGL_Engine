@@ -115,7 +115,7 @@ void main() {
     vec3 Lo = vec3(0.0);
 
     // Point light loop
-    for (int i = 0; i < min(NumPointLights, 128); i++) {
+    for (int i = 0; i < min(NumPointLights, 64); i++) {
         vec3 L = normalize(PointLights[i].Position - Position);
         vec3 H = normalize(V + L);
         float distance = length(PointLights[i].Position - Position);
@@ -139,7 +139,7 @@ void main() {
     }
 
     // Directional light loop
-    for (int i = 0; i < min(NumDirectionalLights, 128); i++) {
+    for (int i = 0; i < min(NumDirectionalLights, 64); i++) {
         vec3 L = normalize(-DirectionalLights[i].Direction);
         vec3 H = normalize(V + L);
         vec3 radiance = DirectionalLights[i].Color * DirectionalLights[i].Intensity;
@@ -161,7 +161,7 @@ void main() {
     }
 
     // Spotlight loop
-    for (int i = 0; i < min(NumSpotLights, 128); i++) {
+    for (int i = 0; i < min(NumSpotLights, 64); i++) {
         vec3 L = normalize(SpotLights[i].Position - Position);
         vec3 H = normalize(V + L);
         float distance = length(SpotLights[i].Position - Position);
