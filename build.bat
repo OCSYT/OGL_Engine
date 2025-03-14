@@ -8,7 +8,7 @@ for /r src %%f in (*.cpp *.c) do (
 )
 
 :: Compile the project treating all files as C++ (using -x c++)
-clang -x c++ -I include -I src %SRC_FILES% -o output/Output.exe -std=c++17 -Wall -Wextra -L lib -lgdi32 -lglfw3dll -lassimp -Wl,/STACK:8388608
+clang -x c++ -I include -I src %SRC_FILES%  -o output/Output.exe -std=c++17 -Wall -Wextra -L lib -lgdi32 -lglfw3dll -lassimp -Wl,--stack=8388608
 
 if %ERRORLEVEL% neq 0 (
     echo Build failed.
