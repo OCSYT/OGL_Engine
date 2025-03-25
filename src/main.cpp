@@ -46,19 +46,33 @@ void InitRenderTarget()
 void InitText()
 {
     FontMaterial = new Engine::Material("Assets/Shaders/Main/Vert.glsl", "Assets/Shaders/Main/Frag.glsl", {"Assets/Textures/Font/Arial.png"});
-    FontMaterial->SetUniform("Color", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+    FontMaterial->SetUniform("Color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
     FontMaterial->SetDepthSortingMode(Engine::Material::DepthSortingMode::None);
     FontMaterial->SetBlendingMode(Engine::Material::BlendingMode::AlphaBlend);
     UIText = new Engine::Text(FontMaterial, glm::vec2(0, 0), 32.0f, &WindowWidth, &WindowHeight);
+    UIText->SetSpacing(0.6f);
 }
 
 void RenderText(const std::string &Text)
 {
     float ScaleFactor = std::min(WindowWidth, WindowHeight) / 10.0f;
-    UIText->SetPosition(glm::vec2(ScaleFactor / 2, ScaleFactor / 2));
+    UIText->SetPosition(glm::vec2(ScaleFactor/2, ScaleFactor / 2));
     UIText->SetScale(ScaleFactor / 3);
-    UIText->Render(Text + "\n" + "Sponza Scene");
+
+    std::string GpuVendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+    std::string GpuRenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    std::string OpenGLVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    std::string GlslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    std::string DisplayText = Text + "\n" + 
+                              "Sponza Scene" + "\n" + 
+                              "GPU: " + GpuVendor + " - " + GpuRenderer + "\n" +
+                              "OpenGL: " + OpenGLVersion + "\n" +
+                              "GLSL: " + GlslVersion;
+
+    UIText->Render(DisplayText, Engine::Text::TextAlign::Left);
 }
+
 
 void InitModel()
 {

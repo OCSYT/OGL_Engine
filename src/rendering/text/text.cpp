@@ -112,7 +112,6 @@ namespace Engine
         CharacterMap["}"] = 93;
         CharacterMap["~"] = 94;
     }
-    
 
     void Text::SetCharacterUVs()
     {
@@ -128,58 +127,70 @@ namespace Engine
 
             float xStart = col * charSize;
             float yStart = row * charSize;
-            float xEnd = xStart + charSize;  
-            float yEnd = yStart - charSize; 
+            float xEnd = xStart + charSize;
+            float yEnd = yStart - charSize;
 
             CharUVs[i] = glm::vec4(xStart, yStart, xEnd, yEnd);
         }
     }
 
-    void Text::Render(const std::string &text)
+    void Text::Render(const std::string &Text, TextAlign Alignment)
     {
-        float xOffset = 0.0f;
-        float yOffset = 0.0f;
-        float Spacing = Scale;
-        float LineHeight = Scale;
-        for (char c : text)
+        float YOffset = 0.0f;
+        std::vector<std::string> Lines;
+        std::stringstream Stream(Text);
+        std::string Line;
+    
+        while (std::getline(Stream, Line, '\n'))
+            Lines.push_back(Line);
+    
+        for (const std::string &Line : Lines)
         {
-            if (c == ' ')
+            float LineWidth = 0.0f;
+            for (char Character : Line)
             {
-                xOffset += Spacing;
-                continue;
+                if (Character == ' ' || CharacterMap.count(std::string(1, Character)))
+                    LineWidth += Spacing * Scale;
             }
     
-            if (c == '\n')
+            float XOffset = (Alignment == TextAlign::Right) ? -LineWidth :
+                            (Alignment == TextAlign::Center) ? -LineWidth / 2 : 0.0f;
+    
+            for (char Character : Line)
             {
-                xOffset = 0.0f;
-                yOffset += LineHeight;
-                continue;
+                if (Character == ' ')
+                {
+                    XOffset += Spacing * Scale;
+                    continue;
+                }
+    
+                auto CharIt = CharacterMap.find(std::string(1, Character));
+                if (CharIt == CharacterMap.end())
+                {
+                    std::cout << "Warning: Character '" << Character << "' not found in the CharacterMap!" << std::endl;
+                    Character = '?';
+                }
+    
+                glm::vec4 UV = CharUVs[CharacterMap[std::string(1, Character)]];
+                SpriteRenderer->SetSize(glm::vec2(Scale, Scale));
+                SpriteRenderer->SetPosition(Position + glm::vec2(XOffset, YOffset));
+                SpriteRenderer->SetUV(UV);
+                SpriteRenderer->Render();
+    
+                XOffset += Spacing * Scale;
             }
     
-            auto it = CharacterMap.find(std::string(1, c));
-            if (it == CharacterMap.end())
-            {
-                std::cout << "Warning: Character '" << c << "' not found in the CharacterMap!" << std::endl;
-                c = '?';
-            }
-    
-            glm::vec4 uv = CharUVs[CharacterMap[std::string(1, c)]];
-            SpriteRenderer->SetSize(glm::vec2(Scale, Scale));
-            SpriteRenderer->SetPosition(Position + glm::vec2(xOffset, yOffset));
-            SpriteRenderer->SetUV(uv);
-            xOffset += Spacing;
-            SpriteRenderer->Render();
+            YOffset += Lineheight * Scale;
         }
     }
     
 
-    void Text::SetPosition(const glm::vec2 &position)
-    {
-        Position = position;
-    }
-
-    void Text::SetScale(float scale)
-    {
-        Scale = scale;
-    }
+    void Text::SetPosition(const glm::vec2 &position) { Position = position; }
+    void Text::SetScale(float scale) { Scale = scale; }
+    void Text::SetSpacing(float spacing) { Spacing = spacing; }
+    void Text::SetLineheight(float lineheight) { Lineheight = lineheight; }
+    glm::vec2 Text::GetPosition() const { return Position; }
+    float Text::GetScale() const { return Scale; }
+    float Text::GetSpacing() const { return Spacing; }
+    float Text::GetLineheight() const { return Lineheight; }
 }
