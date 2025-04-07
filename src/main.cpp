@@ -9,7 +9,6 @@
 #include <sstream>
 #include <algorithm>
 
-#include "util/util.h"
 #include "rendering/render_target/render_target.h"
 #include "rendering/camera/camera.h"
 #include "rendering/sprites/sprite.h"
@@ -64,8 +63,8 @@ void RenderText(const std::string &Text)
     std::string OpenGLVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
     std::string GlslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    std::string DisplayText = Text + "\n" + 
-                              "Sponza Scene" + "\n" + 
+    std::string DisplayText = Text + "\n" +
+                              "Sponza Scene" + "\n" +
                               "GPU: " + GpuVendor + " - " + GpuRenderer + "\n" +
                               "OpenGL: " + OpenGLVersion + "\n" +
                               "GLSL: " + GlslVersion;
@@ -77,7 +76,7 @@ void RenderText(const std::string &Text)
 void InitModel()
 {
     DirectionalLights.push_back({{}, glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 2, 0, 0});
-    
+
     Engine::Model::Mesh Mesh = Engine::Model::LoadMesh("Assets/Models/Sponza.obj");
     std::vector<Engine::Material *> AssignedMaterials(Mesh.MaterialData.size(), nullptr);
 
@@ -148,18 +147,18 @@ void SetLights(const std::vector<Light>& Lights, const std::string& Prefix)
         std::string Index = std::to_string(i);
         RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Color").c_str(), Lights[i].Color);
         RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Intensity").c_str(), Lights[i].Intensity);
-        
+
         if (Prefix == "SpotLights")
         {
             RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Cutoff").c_str(), Lights[i].CutOff);
             RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].OuterCutoff").c_str(), Lights[i].OuterCutOff);
         }
-        
+
         if (Prefix == "SpotLights" || Prefix == "PointLights")
         {
             RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Position").c_str(), Lights[i].Position);
         }
-        
+
         if (Prefix == "DirectionalLights")
         {
             RenderTargetSprite->GetMaterial()->SetUniform((Prefix + "[" + Index + "].Direction").c_str(), Lights[i].Direction);
@@ -236,7 +235,7 @@ void RunEngine()
         std::cerr << "Failed to initialize GLFW!" << std::endl;
         return;
     }
-    
+
     GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "SPONZAAA!!!", nullptr, nullptr);
     if (!Window)
     {
@@ -244,10 +243,10 @@ void RunEngine()
         glfwTerminate();
         return;
     }
-    
+
     glfwMakeContextCurrent(Window);
     glfwSetFramebufferSizeCallback(Window, FramebufferSizeCallback);
-    
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD!" << std::endl;
@@ -255,25 +254,25 @@ void RunEngine()
         glfwTerminate();
         return;
     }
-    
+
     InitRenderTarget();
     InitText();
     InitModel();
     MainCamera.SetPosition(glm::vec3(0, 0, 1));
-    
+
     while (!glfwWindowShouldClose(Window))
         Render(Window);
-    
+
     for (auto& mat : Model->Materials)
         delete mat;
     Engine::Model::UnloadModelInstance(*Model);
-    
+
     delete FontMaterial;
     delete RenderTargetMaterial;
     delete UIText;
     delete RenderTargetSprite;
     delete SceneRenderTarget;
-    
+
     glfwDestroyWindow(Window);
     glfwTerminate();
 }
